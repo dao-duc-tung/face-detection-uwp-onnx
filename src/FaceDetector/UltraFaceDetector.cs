@@ -5,6 +5,7 @@ using FaceDetection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,9 @@ namespace FaceDetection.FaceDetector
         // TODO: Load config of confidence_threshold, IoU_threshold
         private float _confidence_threshold = 0.7f;
         private float _iou_threshold = 0.0f;
+        private int LIMIT_MAX_FACES = 200;
+
+        public event FaceDetectedEventHandler FaceDetected;
 
         public bool IsModelLoaded()
         {
@@ -52,7 +56,7 @@ namespace FaceDetection.FaceDetector
             }
         }
 
-        public async Task<IReadOnlyList<FaceBoundingBox>> Detect(Mat originalImage)
+        public async Task Detect(Mat originalImage)
         {
             var input = Preprocess(originalImage);
 
@@ -64,7 +68,13 @@ namespace FaceDetection.FaceDetector
             LearningModelEvaluationResult result = await this._session.EvaluateAsync(binding, "0");
             
             var faces = Postprocess(output);
-            return faces;
+            this.RaiseFaceDetectedEvent(faces, originalImage.Size);
+        }
+
+        private void RaiseFaceDetectedEvent(IReadOnlyList<FaceBoundingBox> faces, Size originalSize)
+        {
+            if (this.FaceDetected == null) return;
+            this.FaceDetected(this, faces, originalSize);
         }
 
         private struct InputImageSettings
@@ -76,23 +86,29 @@ namespace FaceDetection.FaceDetector
 
         private UltraFaceDetectorInput Preprocess(Mat originalImage)
         {
+            // Convert BGR to RGB
             int nChannel = InputImageSettings.NumberOfChannels;
-            Mat rgbImage = new Mat(new System.Drawing.Size(originalImage.Width, originalImage.Height), originalImage.Depth, nChannel);
+            Mat rgbImage = new Mat(new Size(originalImage.Width, originalImage.Height), originalImage.Depth, nChannel);
             var conversion = originalImage.NumberOfChannels == 4 ? ColorConversion.Bgra2Rgb : ColorConversion.Bgr2Rgb;
             CvInvoke.CvtColor(originalImage, rgbImage, conversion);
 
+            // Resize
             int inputWidth = InputImageSettings.ImageWidth;
             int inputHeight = InputImageSettings.ImageHeight;
-            System.Drawing.Size inputSize = new System.Drawing.Size(inputWidth, inputHeight);
+            System.Drawing.Size inputSize = new Size(inputWidth, inputHeight);
             Mat resizedImage = new Mat(inputSize, rgbImage.Depth, nChannel);
             CvInvoke.Resize(rgbImage, resizedImage, inputSize, 1.0, 1.0);
 
+            // Normalize
             Mat floatImage = new Mat(inputSize, resizedImage.Depth, nChannel);
             resizedImage.ConvertTo(floatImage, DepthType.Cv32F);
             floatImage = (floatImage - 127) / 128;
+
+            // Convert to TensorFloat
             TensorFloat tensorInput = ConvertImageToTensorFloat(floatImage);
             UltraFaceDetectorInput modelInput = new UltraFaceDetectorInput() { input = tensorInput };
 
+            // Clean
             rgbImage.Dispose();
             resizedImage.Dispose();
             floatImage.Dispose();
@@ -102,9 +118,6 @@ namespace FaceDetection.FaceDetector
         private static TensorFloat ConvertImageToTensorFloat(Mat image)
         {
             // perform transpose permute [2,0,1] and expand dims at axis=0
-            // image = np.transpose(image, [2, 0, 1])
-            // image = np.expand_dims(image, axis = 0)
-            // image = image.astype(np.float32)
             int width = image.Width;
             int height = image.Height;
 
@@ -136,7 +149,14 @@ namespace FaceDetection.FaceDetector
         {
             var confidences = output.scores.GetAsVectorView();
             var boxes = output.boxes.GetAsVectorView();
+            var boxCandidates = this.FilterConfidences(confidences, boxes);
+            var predictions = this.HardNMS(boxCandidates);
+            var picked = predictions.GetRange(0, Math.Min(predictions.Count, this.LIMIT_MAX_FACES));
+            return picked;
+        }
 
+        private List<FaceBoundingBox> FilterConfidences(IReadOnlyList<float> confidences, IReadOnlyList<float> boxes)
+        {
             List<FaceBoundingBox> boxCandidates = new List<FaceBoundingBox>();
             for (int i = 0; i < confidences.Count; ++i)
             {
@@ -158,7 +178,11 @@ namespace FaceDetection.FaceDetector
                     }
                 }
             }
+            return boxCandidates;
+        }
 
+        private List<FaceBoundingBox> HardNMS(List<FaceBoundingBox> boxCandidates)
+        {
             // Do Non-Maximum Suppression to remove overlapping boxes
             boxCandidates.Sort((a, b) => b.Confidence.CompareTo(a.Confidence));
             List<FaceBoundingBox> predictions = new List<FaceBoundingBox>();
@@ -179,9 +203,7 @@ namespace FaceDetection.FaceDetector
                     }
                 }
             }
-
-            List<FaceBoundingBox> picked = predictions.GetRange(0, Math.Min(predictions.Count, 200));
-            return picked;
+            return predictions;
         }
 
         private static float Get_IOU(FaceBoundingBox bb1, FaceBoundingBox bb2)
