@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FaceDetection.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,18 @@ namespace FaceDetection
     /// </summary>
     sealed partial class App : Application
     {
+        private static MainPageViewModel _mainPageViewModel;
+        public static MainPageViewModel MainPageViewModel
+        {
+            get
+            {
+                if (_mainPageViewModel == null)
+                {
+                    _mainPageViewModel = new MainPageViewModel();
+                }
+                return _mainPageViewModel;
+            }
+        }
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
