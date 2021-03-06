@@ -17,6 +17,8 @@ using Windows.Devices.Enumeration;
 using Windows.Media.MediaProperties;
 using System.Threading;
 using System.IO;
+using FaceDetection.DistanceEstimator;
+using System.ComponentModel;
 
 namespace FaceDetection.ViewModels
 {
@@ -30,7 +32,6 @@ namespace FaceDetection.ViewModels
 
         private int _processingFlag;
         private MediaFrameReader _frameReader;
-
 
         // TODO: Create Config to load modelFileName
         private string _modelFileName = "version-RFB-320.onnx";
@@ -46,6 +47,9 @@ namespace FaceDetection.ViewModels
         }
         public event FaceDetectedEventHandler FaceDetected;
 
+        private FocalLengthBasedDistanceEstimator _distanceEstimator
+            = new FocalLengthBasedDistanceEstimator();
+
         public MainPageViewModel()
         {
             this.SubscribeEvents();
@@ -57,7 +61,7 @@ namespace FaceDetection.ViewModels
             this.PropertyChanged += MainPageViewModel_PropertyChanged;
         }
 
-        private void MainPageViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void MainPageViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(this.IsFaceDetectionEnabled))
             {
@@ -65,7 +69,7 @@ namespace FaceDetection.ViewModels
             }
         }
 
-        private void _frameModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(this._frameModel.SoftwareBitmap))
             {
@@ -206,21 +210,25 @@ namespace FaceDetection.ViewModels
         private void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
         {
             if (this.FaceDetected == null) return;
-            
+            this.FaceDetected(sender, faceBoundingBoxes, originalSize);
+        }
+
+        public FaceBoundingBox ScaleBoundingBox(FaceBoundingBox origBB, System.Drawing.Size originalSize)
+        {
             int origWidth = originalSize.Width;
             int origHeight = originalSize.Height;
 
-            var scaledBBs = new List<FaceBoundingBox>();
-            for (int i = 0; i < faceBoundingBoxes.Count; ++i)
-            {
-                FaceBoundingBox bb = faceBoundingBoxes[i];
-                bb.X0 *= origWidth;
-                bb.X1 *= origWidth;
-                bb.Y0 *= origHeight;
-                bb.Y1 *= origHeight;
-                scaledBBs.Add(bb);
-            }
-            this.FaceDetected(sender, scaledBBs, originalSize);
+            var bb = new FaceBoundingBox();
+            bb.X0 = origBB.X0 * origWidth;
+            bb.X1 = origBB.X1 * origWidth;
+            bb.Y0 = origBB.Y0 * origHeight;
+            bb.Y1 = origBB.Y1 * origHeight;
+            return bb;
+        }
+
+        public float EstimateDistance(FaceBoundingBox bb)
+        {
+            return this._distanceEstimator.ComputeDistance(bb);
         }
 
         public async void CacheImageFromStreamAsync(IRandomAccessStream fileStream)
