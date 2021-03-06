@@ -40,11 +40,12 @@ namespace FaceDetection
             Loaded += OnLoaded;
         }
 
-        private void OnLoaded(object sender, RoutedEventArgs e)
+        private async void OnLoaded(object sender, RoutedEventArgs e)
         {
             _viewModel = App.MainPageViewModel;
             _viewModel.FaceDetected += _viewModel_FaceDetected;
             DataContext = _viewModel;
+            await _viewModel.LoadModelAsync();
         }
 
         private async void PhotoButton_Click(object sender, RoutedEventArgs e)

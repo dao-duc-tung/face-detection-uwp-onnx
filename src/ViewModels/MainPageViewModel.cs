@@ -49,7 +49,6 @@ namespace FaceDetection.ViewModels
         public MainPageViewModel()
         {
             SubscribeEvents();
-            Task.Run(LoadModelAsync);
         }
 
         public void OnFrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args)
@@ -99,7 +98,7 @@ namespace FaceDetection.ViewModels
             return _distanceEstimator.ComputeDistance(bb);
         }
 
-        private async Task LoadModelAsync()
+        public async Task LoadModelAsync()
         {
             StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
             _faceDetector = new UltraFaceDetector();
@@ -137,11 +136,18 @@ namespace FaceDetection.ViewModels
         public async Task InitCameraAsync()
         {
             await CameraControl.InitCameraAsync();
-            CameraControl.RegisterFrameArrivedCallback(OnFrameArrived);
         }
 
-        public async Task StartPreviewAsync() => await CameraControl.StartPreviewAsync();
+        public async Task StartPreviewAsync()
+        {
+            CameraControl.RegisterFrameArrivedHandler(OnFrameArrived);
+            await CameraControl.StartPreviewAsync();
+        }
 
-        public async Task StopPreviewAsync() => await CameraControl.StopPreviewAsync();
+        public async Task StopPreviewAsync()
+        {
+            await CameraControl.StopPreviewAsync();
+            CameraControl.UnregisterFrameArrivedHandler(OnFrameArrived);
+        }
     }
 }
