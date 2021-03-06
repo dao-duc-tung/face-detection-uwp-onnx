@@ -12,6 +12,7 @@ namespace FaceDetection.FaceDetector
     public interface IFaceDetector
     {
         void LoadModel(StorageFile file);
-        IReadOnlyList<FaceBoundingBox> Detect(Mat input);
+        bool IsModelLoaded();
+        Task<IReadOnlyList<FaceBoundingBox>> Detect(Mat input);
     }
 }
