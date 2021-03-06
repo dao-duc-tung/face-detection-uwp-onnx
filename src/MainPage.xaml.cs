@@ -65,8 +65,22 @@ namespace FaceDetection
 
         private void FaceDetectionButton_Click(object sender, RoutedEventArgs e)
         {
-
+            FacesCanvas.Children.Clear();
+            if (!this._viewModel.IsFaceDetectionEnabled)
+            {
+                this._viewModel.IsFaceDetectionEnabled = true;
+            } else
+            {
+                this._viewModel.IsFaceDetectionEnabled = false;
+            }
+            UpdateCaptureControls();
         }
 
+        private void UpdateCaptureControls()
+        {
+            FaceDetectionDisabledIcon.Visibility = this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+            FaceDetectionEnabledIcon.Visibility = !this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+            FacesCanvas.Visibility = this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 }
