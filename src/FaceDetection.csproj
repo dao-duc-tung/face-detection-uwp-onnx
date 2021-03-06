@@ -139,7 +139,7 @@
     <Compile Include="Utils\CornerBoundingBox.cs" />
     <Compile Include="Utils\DelegateCommand.cs" />
     <Compile Include="Utils\FaceBoundingBox.cs" />
-    <Compile Include="Utils\Utils.cs" />
+    <Compile Include="Utils\ImageUtils.cs" />
     <Compile Include="ViewModels\MainPageViewModel.cs" />
   </ItemGroup>
   <ItemGroup>

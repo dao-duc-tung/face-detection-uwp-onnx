@@ -39,10 +39,10 @@ namespace FaceDetection.ViewModels
         private IFaceDetector _faceDetector;
         private bool _isFaceDetectionEnabled = false;
         public bool IsFaceDetectionEnabled {
-            get => this._isFaceDetectionEnabled;
+            get => _isFaceDetectionEnabled;
             set
             {
-                SetProperty(ref this._isFaceDetectionEnabled, value);
+                SetProperty(ref _isFaceDetectionEnabled, value);
             }
         }
         public event FaceDetectedEventHandler FaceDetected;
@@ -52,18 +52,19 @@ namespace FaceDetection.ViewModels
 
         public MainPageViewModel()
         {
-            this.SubscribeEvents();
+            SubscribeEvents();
+            Task.Run(LoadModelAsync);
         }
 
         private void SubscribeEvents()
         {
-            this._frameModel.PropertyChanged += _frameModel_PropertyChanged;
-            this.PropertyChanged += MainPageViewModel_PropertyChanged;
+            _frameModel.PropertyChanged += _frameModel_PropertyChanged;
+            PropertyChanged += MainPageViewModel_PropertyChanged;
         }
 
         private void MainPageViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(this.IsFaceDetectionEnabled))
+            if (e.PropertyName == nameof(IsFaceDetectionEnabled))
             {
                 PerformFaceDetection();
             }
@@ -71,7 +72,7 @@ namespace FaceDetection.ViewModels
 
         private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(this._frameModel.SoftwareBitmap))
+            if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
             {
                 PerformFaceDetection();
             }
@@ -86,7 +87,7 @@ namespace FaceDetection.ViewModels
                 {
                     if (bmp != null)
                     {
-                        this._frameModel.SoftwareBitmap = bmp;
+                        _frameModel.SoftwareBitmap = bmp;
                     }
                 }
                 Interlocked.Exchange(ref _processingFlag, 0);
@@ -95,11 +96,11 @@ namespace FaceDetection.ViewModels
 
         public async Task InitCameraAsync()
         {
-            if (!this._isInitialized)
+            if (!_isInitialized)
             {
                 await InitMediaCaptureAsync();
             }
-            if (!this._isInitialized) return;
+            if (!_isInitialized) return;
 
             await InitFrameReaderAsync();
         }
@@ -108,8 +109,8 @@ namespace FaceDetection.ViewModels
         {
             try
             {
-                await this.MediaCapture.StartPreviewAsync();
-                this.IsPreviewing = true;
+                await MediaCapture.StartPreviewAsync();
+                IsPreviewing = true;
             }
             catch (FileLoadException)
             {
@@ -119,9 +120,9 @@ namespace FaceDetection.ViewModels
 
         public async Task StopPreviewAsync()
         {
-            this.IsPreviewing = false;
-            await this.MediaCapture.StopPreviewAsync();
-            await this._frameReader.StopAsync();
+            IsPreviewing = false;
+            await MediaCapture.StopPreviewAsync();
+            await _frameReader.StopAsync();
         }
 
         private async Task InitMediaCaptureAsync()
@@ -136,7 +137,7 @@ namespace FaceDetection.ViewModels
             // Set Memory Preference to CPU to guarantee SoftwareBitmap property is non-null
             // Otherwise use Direct3DSurface property
             // https://docs.microsoft.com/en-us/uwp/api/windows.media.capture.frames.videomediaframe.softwarebitmap?view=winrt-19041
-            this.MediaCapture = new MediaCapture();
+            MediaCapture = new MediaCapture();
             var settings = new MediaCaptureInitializationSettings
             {
                 VideoDeviceId = cameraDevice.Id, MemoryPreference = MediaCaptureMemoryPreference.Cpu
@@ -144,8 +145,8 @@ namespace FaceDetection.ViewModels
 
             try
             {
-                await this.MediaCapture.InitializeAsync(settings);
-                this._isInitialized = true;
+                await MediaCapture.InitializeAsync(settings);
+                _isInitialized = true;
             }
             catch (UnauthorizedAccessException)
             {
@@ -155,41 +156,40 @@ namespace FaceDetection.ViewModels
 
         private async Task InitFrameReaderAsync()
         {
-            var frameSource = this.MediaCapture.FrameSources.Where(
+            var frameSource = MediaCapture.FrameSources.Where(
                 source => source.Value.Info.SourceKind == MediaFrameSourceKind.Color)
                 .First();
-            this._frameReader = await this.MediaCapture.CreateFrameReaderAsync(frameSource.Value, MediaEncodingSubtypes.Rgb32);
+            _frameReader = await MediaCapture.CreateFrameReaderAsync(frameSource.Value, MediaEncodingSubtypes.Rgb32);
 
             // Setup handler for frames
-            this._frameReader.FrameArrived += OnFrameArrived;
-            await this._frameReader.StartAsync();
+            _frameReader.FrameArrived += OnFrameArrived;
+            await _frameReader.StartAsync();
         }
 
         private async void PerformFaceDetection()
         {
-            if (!this._isFaceDetectionEnabled || this._faceDetector == null) return;
-            else if (this._faceDetector != null && !this._faceDetector.IsModelLoaded()) return;
+            if (!_isFaceDetectionEnabled || _faceDetector == null) return;
+            else if (_faceDetector != null && !_faceDetector.IsModelLoaded()) return;
 
-            SoftwareBitmap bmp = this._frameModel.SoftwareBitmap;
+            SoftwareBitmap bmp = _frameModel.SoftwareBitmap;
             if (bmp == null) return;
-            Mat img = UtilFuncs.ConvertSoftwareBitmapToMat(bmp);
+            Mat img = ImageUtils.ConvertSoftwareBitmapToMat(bmp);
             if (img == null) return;
-            await this._faceDetector.Detect(img);
+            await _faceDetector.Detect(img);
             img.Dispose();
         }
 
-        public async Task LoadModelAsync()
+        private async Task LoadModelAsync()
         {
             StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
-            this._faceDetector = new UltraFaceDetector();
-            this._faceDetector.LoadModel(file);
-            this._faceDetector.FaceDetected += _faceDetector_FaceDetected;
+            _faceDetector = new UltraFaceDetector();
+            _faceDetector.LoadModel(file);
+            _faceDetector.FaceDetected += _faceDetector_FaceDetected;
         }
 
         private void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
         {
-            if (this.FaceDetected == null) return;
-            this.FaceDetected(sender, faceBoundingBoxes, originalSize);
+            FaceDetected?.Invoke(sender, faceBoundingBoxes, originalSize);
         }
 
         public FaceBoundingBox ScaleBoundingBox(FaceBoundingBox origBB, System.Drawing.Size originalSize)
@@ -207,14 +207,14 @@ namespace FaceDetection.ViewModels
 
         public float EstimateDistance(FaceBoundingBox bb)
         {
-            return this._distanceEstimator.ComputeDistance(bb);
+            return _distanceEstimator.ComputeDistance(bb);
         }
 
         public async void CacheImageFromStreamAsync(IRandomAccessStream fileStream)
         {
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(fileStream);
             SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
-            this._frameModel.SoftwareBitmap = softwareBitmap;
+            _frameModel.SoftwareBitmap = softwareBitmap;
         }
 
         private static async Task<DeviceInformation> FindCameraDeviceByPanelAsync(Windows.Devices.Enumeration.Panel desiredPanel)

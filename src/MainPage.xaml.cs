@@ -32,19 +32,18 @@ namespace FaceDetection
     public sealed partial class MainPage : Page
     {
         private MainPageViewModel _viewModel;
+
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             Loaded += OnLoaded;
         }
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            this._viewModel = App.MainPageViewModel;
-            this._viewModel.FaceDetected += _viewModel_FaceDetected;
-
-            this.DataContext = this._viewModel;
-            await this._viewModel.LoadModelAsync();
+            _viewModel = App.MainPageViewModel;
+            _viewModel.FaceDetected += _viewModel_FaceDetected;
+            DataContext = _viewModel;
         }
 
         private async void PhotoButton_Click(object sender, RoutedEventArgs e)
@@ -61,23 +60,23 @@ namespace FaceDetection
             {
                 using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
                 {
-                    if (this._viewModel.IsPreviewing)
+                    if (_viewModel.IsPreviewing)
                     {
                         await StopPreviewingAsync();
                     }
-                    this._viewModel.CacheImageFromStreamAsync(fileStream);
+                    _viewModel.CacheImageFromStreamAsync(fileStream);
                     BitmapImage bmp = new BitmapImage();
                     bmp.DecodePixelHeight = (int)ImageControl.Height;
                     bmp.DecodePixelWidth = (int)ImageControl.Width;
                     await bmp.SetSourceAsync(fileStream);
-                    this.ImageControl.Source = bmp;
+                    ImageControl.Source = bmp;
                 }
             }
         }
 
         private async void CameraButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!this._viewModel.IsPreviewing)
+            if (!_viewModel.IsPreviewing)
             {
                 await StartPreviewingAsync();
             } else
@@ -89,23 +88,23 @@ namespace FaceDetection
 
         private async Task StartPreviewingAsync()
         {
-            this.ImageControl.Source = null;
-            await this._viewModel.InitCameraAsync();
-            PreviewControl.Source = this._viewModel.MediaCapture;
-            await this._viewModel.StartPreviewAsync();
+            ImageControl.Source = null;
+            await _viewModel.InitCameraAsync();
+            PreviewControl.Source = _viewModel.MediaCapture;
+            await _viewModel.StartPreviewAsync();
         }
 
         private async Task StopPreviewingAsync()
         {
             PreviewControl.Source = null;
-            await this._viewModel.StopPreviewAsync();
+            await _viewModel.StopPreviewAsync();
             FacesCanvas.Children.Clear();
         }
 
         private void FaceDetectionButton_Click(object sender, RoutedEventArgs e)
         {
             FacesCanvas.Children.Clear();
-            this._viewModel.IsFaceDetectionEnabled = !this._viewModel.IsFaceDetectionEnabled;
+            _viewModel.IsFaceDetectionEnabled = !_viewModel.IsFaceDetectionEnabled;
             UpdateCaptureControls();
         }
 
@@ -119,14 +118,14 @@ namespace FaceDetection
             FacesCanvas.Children.Clear();
             for (int i = 0; i < faces.Count; ++i)
             {
-                var bb = this._viewModel.ScaleBoundingBox(faces[i], originalSize);
+                var bb = _viewModel.ScaleBoundingBox(faces[i], originalSize);
                 Rectangle faceBB = ConvertPreviewToUiRectangle(bb, originalSize);
                 faceBB.StrokeThickness = 2;
                 faceBB.Stroke = new SolidColorBrush(Colors.LimeGreen);
                 FacesCanvas.Children.Add(faceBB);
 
                 TextBlock txtBlk = new TextBlock();
-                txtBlk.Text = this._viewModel.EstimateDistance(faces[i]).ToString("n0") + " cm";
+                txtBlk.Text = _viewModel.EstimateDistance(faces[i]).ToString("n0") + " cm";
                 txtBlk.Foreground = new SolidColorBrush(Colors.LimeGreen);
                 Canvas.SetLeft(txtBlk, Canvas.GetLeft(faceBB));
                 Canvas.SetTop(txtBlk, Canvas.GetTop(faceBB));
@@ -204,9 +203,9 @@ namespace FaceDetection
 
         private void UpdateCaptureControls()
         {
-            FaceDetectionDisabledIcon.Visibility = this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
-            FaceDetectionEnabledIcon.Visibility = !this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
-            FacesCanvas.Visibility = this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+            FaceDetectionDisabledIcon.Visibility = _viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+            FaceDetectionEnabledIcon.Visibility = !_viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+            FacesCanvas.Visibility = _viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

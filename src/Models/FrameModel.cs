@@ -13,10 +13,10 @@ namespace FaceDetection.Models
         private SoftwareBitmap _softwareBitmap;
         public SoftwareBitmap SoftwareBitmap
         {
-            get => this._softwareBitmap;
+            get => _softwareBitmap;
             set
             {
-                SetProperty(ref this._softwareBitmap, value);
+                SetProperty(ref _softwareBitmap, value);
             }
         }
     }

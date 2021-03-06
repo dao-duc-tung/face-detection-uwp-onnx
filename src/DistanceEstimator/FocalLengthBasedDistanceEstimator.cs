@@ -17,12 +17,12 @@ namespace FaceDetection.DistanceEstimator
 
         public FocalLengthBasedDistanceEstimator()
         {
-            this._focalLength = this._fixedFaceCameraDistanceCM * this._fixedFaceHeightPixel / this._fixedFaceHeightCM;
+            _focalLength = _fixedFaceCameraDistanceCM * _fixedFaceHeightPixel / _fixedFaceHeightCM;
         }
 
         public float ComputeDistance(CornerBoundingBox bb)
         {
-            return this._focalLength * this._fixedFaceHeightCM / bb.Height;
+            return _focalLength * _fixedFaceHeightCM / bb.Height;
         }
     }
 }
