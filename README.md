@@ -8,7 +8,7 @@
 - Display bounding boxes on detected faces
 - Estimate distance of faces from the camera
 
-## Prequisites
+## Prerequisites
 
 - Emgu.CV==4.5.1
 - Emgu.CV.runtime.windows==4.5.1
