@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,6 +25,19 @@ namespace FaceDetection
         public MainPage()
         {
             this.InitializeComponent();
+        private async void PhotoButton_Click(object sender, RoutedEventArgs e)
+        {
         }
+
+        private async void CameraButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void FaceDetectionButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
     }
 }
