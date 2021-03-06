@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using FaceDetection.Utils;
 using FaceDetection.FaceDetector;
 using System.Diagnostics;
 
@@ -30,8 +29,14 @@ namespace FaceDetection.ViewModels
                 SetProperty(ref this._isFaceDetectionEnabled, value);
             }
         }
+        public event FaceDetectedEventHandler FaceDetected;
 
         public MainPageViewModel()
+        {
+            this.SubscribeEvents();
+        }
+
+        private void SubscribeEvents()
         {
             this._frameModel.PropertyChanged += _frameModel_PropertyChanged;
             this.PropertyChanged += MainPageViewModel_PropertyChanged;
@@ -41,7 +46,7 @@ namespace FaceDetection.ViewModels
         {
             if (e.PropertyName == nameof(this.IsFaceDetectionEnabled))
             {
-                DetectAndDisplayFace();
+                PerformFaceDetection();
             }
         }
 
@@ -49,11 +54,11 @@ namespace FaceDetection.ViewModels
         {
             if (e.PropertyName == nameof(this._frameModel.SoftwareBitmap))
             {
-                DetectAndDisplayFace();
+                PerformFaceDetection();
             }
         }
 
-        private async void DetectAndDisplayFace()
+        private async void PerformFaceDetection()
         {
             if (!this._isFaceDetectionEnabled || this._faceDetector == null) return;
             else if (this._faceDetector != null && !this._faceDetector.IsModelLoaded()) return;
@@ -63,8 +68,8 @@ namespace FaceDetection.ViewModels
             try
             {
                 Mat img = UtilFuncs.ConvertSoftwareBitmapToMat(bmp);
-                var bbs = await this._faceDetector.Detect(img);
-                // TODO: Display bounding boxes
+                await this._faceDetector.Detect(img);
+                img.Dispose();
             } catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
@@ -76,12 +81,33 @@ namespace FaceDetection.ViewModels
             try
             {
                 StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
-                _faceDetector = new UltraFaceDetector();
-                _faceDetector.LoadModel(file);
+                this._faceDetector = new UltraFaceDetector();
+                this._faceDetector.LoadModel(file);
+                this._faceDetector.FaceDetected += _faceDetector_FaceDetected;
             } catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
             }
+        }
+
+        private void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
+        {
+            if (this.FaceDetected == null) return;
+            
+            int origWidth = originalSize.Width;
+            int origHeight = originalSize.Height;
+
+            var scaledBBs = new List<FaceBoundingBox>();
+            for (int i = 0; i < faceBoundingBoxes.Count; ++i)
+            {
+                FaceBoundingBox bb = faceBoundingBoxes[i];
+                bb.X0 *= origWidth;
+                bb.X1 *= origWidth;
+                bb.Y0 *= origHeight;
+                bb.Y1 *= origHeight;
+                scaledBBs.Add(bb);
+            }
+            this.FaceDetected(sender, scaledBBs, originalSize);
         }
 
         public async void CacheImageFromStreamAsync(IRandomAccessStream fileStream)
