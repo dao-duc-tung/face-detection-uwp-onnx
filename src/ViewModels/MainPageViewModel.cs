@@ -10,12 +10,16 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using FaceDetection.Utils;
+using FaceDetection.FaceDetector;
 
 namespace FaceDetection.ViewModels
 {
     public class MainPageViewModel : BaseNotifyPropertyChanged
     {
         private FrameModel _frameModel = new FrameModel();
+        private IFaceDetector _faceDetector;
+        // TODO: Create Config to load modelFileName
+        private string _modelFileName;
 
         private bool _isFaceDetectionEnabled = false;
         public bool IsFaceDetectionEnabled {
@@ -39,14 +43,24 @@ namespace FaceDetection.ViewModels
             }
         }
 
-        private void DetectAndDisplayFace()
+        private async void DetectAndDisplayFace()
         {
             if (!this._isFaceDetectionEnabled) return;
+            if (this._faceDetector == null)
+            {
+                await LoadModelAsync();
+            }
 
             SoftwareBitmap bmp = this._frameModel.SoftwareBitmap;
             Mat img = UtilFuncs.ConvertSoftwareBitmapToMat(bmp);
             // TODO: Perform face detection by using ONNX Model
             // TODO: Display bounding boxes
+        }
+
+        private async Task LoadModelAsync()
+        {
+            StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
+            _faceDetector.LoadModel(file);
         }
 
         public async void CacheImageFromStreamAsync(IRandomAccessStream fileStream)
