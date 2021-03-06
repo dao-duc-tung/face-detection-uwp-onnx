@@ -1,4 +1,5 @@
-﻿using FaceDetection.ViewModels;
+﻿using FaceDetection.Utils;
+using FaceDetection.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +9,8 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -16,6 +19,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Shapes;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -30,8 +34,16 @@ namespace FaceDetection
         public MainPage()
         {
             this.InitializeComponent();
+            Loaded += OnLoaded;
+        }
+
+        private async void OnLoaded(object sender, RoutedEventArgs e)
+        {
             this._viewModel = App.MainPageViewModel;
+            this._viewModel.FaceDetected += _viewModel_FaceDetected;
+
             this.DataContext = this._viewModel;
+            await this._viewModel.LoadModelAsync();
         }
 
         private async void PhotoButton_Click(object sender, RoutedEventArgs e)
@@ -65,8 +77,107 @@ namespace FaceDetection
 
         private void FaceDetectionButton_Click(object sender, RoutedEventArgs e)
         {
-
+            FacesCanvas.Children.Clear();
+            if (!this._viewModel.IsFaceDetectionEnabled)
+            {
+                this._viewModel.IsFaceDetectionEnabled = true;
+            } else
+            {
+                this._viewModel.IsFaceDetectionEnabled = false;
+            }
+            UpdateCaptureControls();
         }
 
+        private async void _viewModel_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faces, System.Drawing.Size originalSize)
+        {
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => HighlightDetectedFaces(faces, originalSize));
+        }
+
+        private void HighlightDetectedFaces(IReadOnlyList<FaceBoundingBox> faces, System.Drawing.Size originalSize)
+        {
+            FacesCanvas.Children.Clear();
+            for (int i = 0; i < faces.Count; ++i)
+            {
+                Rectangle faceBB = ConvertPreviewToUiRectangle(faces[i], originalSize);
+                faceBB.StrokeThickness = 2;
+                faceBB.Stroke = new SolidColorBrush(Colors.LimeGreen);
+                FacesCanvas.Children.Add(faceBB);
+            }
+        }
+
+        private Rectangle ConvertPreviewToUiRectangle(FaceBoundingBox faceBox, System.Drawing.Size actualContentSize)
+        {
+            var result = new Rectangle();
+            double streamWidth = actualContentSize.Width;
+            double streamHeight = actualContentSize.Height;
+
+            //If there is no available information about the preview, return an empty rectangle, as re - scaling to the screen coordinates will be impossible
+            //  Similarly, if any of the dimensions is zero(which would only happen in an error case) return an empty rectangle
+            if (streamWidth == 0 || streamHeight == 0) return result;
+
+
+            //Get the rectangle that is occupied by the actual video feed
+            var previewInUI = GetDisplayRectInControl(actualContentSize, PreviewControl);
+            var scaleWidth = previewInUI.Width / streamWidth;
+            var scaleHeight = previewInUI.Height / streamHeight;
+
+            //Scale the width and height from preview stream coordinates to window coordinates
+            result.Width = faceBox.Width * scaleWidth;
+            result.Height = faceBox.Height * scaleHeight;
+
+            // Scale the X and Y coordinates from preview stream coordinates to window coordinates
+            var x = previewInUI.X + faceBox.X0 * scaleWidth;
+            var y = previewInUI.Y + faceBox.Y0 * scaleHeight;
+
+            Canvas.SetLeft(result, x);
+            Canvas.SetTop(result, y);
+
+            return result;
+        }
+
+        private Rect GetDisplayRectInControl(System.Drawing.Size actualContentSize, CaptureElement previewControl)
+        {
+            var result = new Rect();
+            // In case this function is called before everything is initialized correctly, return an empty result
+            if (previewControl == null || previewControl.ActualHeight < 1 || previewControl.ActualWidth < 1 ||
+                actualContentSize.Height == 0 || actualContentSize.Width == 0)
+            {
+                return result;
+            }
+
+            var streamWidth = actualContentSize.Width;
+            var streamHeight = actualContentSize.Height;
+
+            // Start by assuming the preview display area in the control spans the entire width and height both (this is corrected in the next if for the necessary dimension)
+            result.Width = previewControl.ActualWidth;
+            result.Height = previewControl.ActualHeight;
+
+            // If UI is "wider" than preview, letterboxing will be on the sides
+            if ((previewControl.ActualWidth / previewControl.ActualHeight > streamWidth / (double)streamHeight))
+            {
+                var scale = previewControl.ActualHeight / streamHeight;
+                var scaledWidth = streamWidth * scale;
+
+                result.X = (previewControl.ActualWidth - scaledWidth) / 2.0;
+                result.Width = scaledWidth;
+            }
+            else // Preview stream is "wider" than UI, so letterboxing will be on the top+bottom
+            {
+                var scale = previewControl.ActualWidth / streamWidth;
+                var scaledHeight = streamHeight * scale;
+
+                result.Y = (previewControl.ActualHeight - scaledHeight) / 2.0;
+                result.Height = scaledHeight;
+            }
+
+            return result;
+        }
+
+        private void UpdateCaptureControls()
+        {
+            FaceDetectionDisabledIcon.Visibility = this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+            FaceDetectionEnabledIcon.Visibility = !this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+            FacesCanvas.Visibility = this._viewModel.IsFaceDetectionEnabled ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 }
