@@ -32,6 +32,12 @@ namespace FaceDetection
             this.InitializeComponent();
             this._viewModel = App.MainPageViewModel;
             this.DataContext = this._viewModel;
+            Loaded += OnLoaded;
+        }
+
+        private async void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            await this._viewModel.LoadModelAsync();
         }
 
         private async void PhotoButton_Click(object sender, RoutedEventArgs e)
