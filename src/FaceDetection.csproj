@@ -127,6 +127,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DistanceEstimator\FocalLengthBasedDistanceEstimator.cs" />
     <Compile Include="FaceDetector\IFaceDetector.cs" />
     <Compile Include="FaceDetector\UltraFaceDetector.cs" />
     <Compile Include="MainPage.xaml.cs">

@@ -97,9 +97,9 @@ namespace FaceDetection
 
         private async Task StopPreviewingAsync()
         {
+            PreviewControl.Source = null;
             await this._viewModel.StopPreviewAsync();
             FacesCanvas.Children.Clear();
-            PreviewControl.Source = null;
         }
 
         private void FaceDetectionButton_Click(object sender, RoutedEventArgs e)
@@ -119,10 +119,18 @@ namespace FaceDetection
             FacesCanvas.Children.Clear();
             for (int i = 0; i < faces.Count; ++i)
             {
-                Rectangle faceBB = ConvertPreviewToUiRectangle(faces[i], originalSize);
+                var bb = this._viewModel.ScaleBoundingBox(faces[i], originalSize);
+                Rectangle faceBB = ConvertPreviewToUiRectangle(bb, originalSize);
                 faceBB.StrokeThickness = 2;
                 faceBB.Stroke = new SolidColorBrush(Colors.LimeGreen);
                 FacesCanvas.Children.Add(faceBB);
+
+                TextBlock txtBlk = new TextBlock();
+                txtBlk.Text = this._viewModel.EstimateDistance(faces[i]).ToString("n0") + " cm";
+                txtBlk.Foreground = new SolidColorBrush(Colors.LimeGreen);
+                Canvas.SetLeft(txtBlk, Canvas.GetLeft(faceBB));
+                Canvas.SetTop(txtBlk, Canvas.GetTop(faceBB));
+                FacesCanvas.Children.Add(txtBlk);
             }
         }
 
