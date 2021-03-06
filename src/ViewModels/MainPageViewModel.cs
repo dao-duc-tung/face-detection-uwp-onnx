@@ -60,9 +60,15 @@ namespace FaceDetection.ViewModels
 
             SoftwareBitmap bmp = this._frameModel.SoftwareBitmap;
             if (bmp == null) return;
-            Mat img = UtilFuncs.ConvertSoftwareBitmapToMat(bmp);
-            // TODO: Perform face detection by using ONNX Model
-            // TODO: Display bounding boxes
+            try
+            {
+                Mat img = UtilFuncs.ConvertSoftwareBitmapToMat(bmp);
+                var bbs = await this._faceDetector.Detect(img);
+                // TODO: Display bounding boxes
+            } catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+            }
         }
 
         public async Task LoadModelAsync()
