@@ -81,25 +81,15 @@ namespace FaceDetection.ViewModels
         {
             if (Interlocked.CompareExchange(ref _processingFlag, 1, 0) == 0)
             {
-                try
+                using (var frame = sender.TryAcquireLatestFrame())
+                using (var bmp = frame?.VideoMediaFrame?.SoftwareBitmap)
                 {
-                    using (var frame = sender.TryAcquireLatestFrame())
-                    using (var bmp = frame?.VideoMediaFrame?.SoftwareBitmap)
+                    if (bmp != null)
                     {
-                        if (bmp != null)
-                        {
-                            this._frameModel.SoftwareBitmap = bmp;
-                        }
+                        this._frameModel.SoftwareBitmap = bmp;
                     }
                 }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.Message);
-                }
-                finally
-                {
-                    Interlocked.Exchange(ref _processingFlag, 0);
-                }
+                Interlocked.Exchange(ref _processingFlag, 0);
             }
         }
 
@@ -169,10 +159,10 @@ namespace FaceDetection.ViewModels
                 source => source.Value.Info.SourceKind == MediaFrameSourceKind.Color)
                 .First();
             this._frameReader = await this.MediaCapture.CreateFrameReaderAsync(frameSource.Value, MediaEncodingSubtypes.Rgb32);
-                
+
             // Setup handler for frames
             this._frameReader.FrameArrived += OnFrameArrived;
-            await this._frameReader.StartAsync();    
+            await this._frameReader.StartAsync();
         }
 
         private async void PerformFaceDetection()
@@ -182,29 +172,18 @@ namespace FaceDetection.ViewModels
 
             SoftwareBitmap bmp = this._frameModel.SoftwareBitmap;
             if (bmp == null) return;
-            try
-            {
-                Mat img = UtilFuncs.ConvertSoftwareBitmapToMat(bmp);
-                await this._faceDetector.Detect(img);
-                img.Dispose();
-            } catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
+            Mat img = UtilFuncs.ConvertSoftwareBitmapToMat(bmp);
+            if (img == null) return;
+            await this._faceDetector.Detect(img);
+            img.Dispose();
         }
 
         public async Task LoadModelAsync()
         {
-            try
-            {
-                StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
-                this._faceDetector = new UltraFaceDetector();
-                this._faceDetector.LoadModel(file);
-                this._faceDetector.FaceDetected += _faceDetector_FaceDetected;
-            } catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
+            StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
+            this._faceDetector = new UltraFaceDetector();
+            this._faceDetector.LoadModel(file);
+            this._faceDetector.FaceDetected += _faceDetector_FaceDetected;
         }
 
         private void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)

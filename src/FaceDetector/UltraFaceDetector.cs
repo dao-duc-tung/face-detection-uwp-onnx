@@ -65,7 +65,7 @@ namespace FaceDetection.FaceDetector
             binding.Bind("scores", output.scores);
             binding.Bind("boxes", output.boxes);
             LearningModelEvaluationResult result = await this._session.EvaluateAsync(binding, "0");
-            
+
             var faces = Postprocess(output);
             this.RaiseFaceDetectedEvent(faces, originalImage.Size);
         }
