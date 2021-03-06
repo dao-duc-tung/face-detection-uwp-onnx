@@ -53,13 +53,15 @@ namespace FaceDetection.Utils
             await _frameReader.StopAsync();
         }
 
-        public void RegisterFrameArrivedCallback(TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> cb)
+        public void RegisterFrameArrivedHandler(TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> cb)
         {
+            if (_frameReader == null) return;
             _frameReader.FrameArrived += cb;
         }
 
-        public void UnregisterFrameArrivedCallback(TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> cb)
+        public void UnregisterFrameArrivedHandler(TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> cb)
         {
+            if (_frameReader == null) return;
             _frameReader.FrameArrived -= cb;
         }
 
