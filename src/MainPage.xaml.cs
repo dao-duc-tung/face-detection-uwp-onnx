@@ -1,4 +1,4 @@
-using FaceDetection.ViewModels;
+﻿using FaceDetection.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,6 +36,26 @@ namespace FaceDetection
 
         private async void PhotoButton_Click(object sender, RoutedEventArgs e)
         {
+            var picker = new FileOpenPicker();
+            picker.ViewMode = PickerViewMode.Thumbnail;
+            picker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".png");
+            picker.FileTypeFilter.Add("*");
+            StorageFile file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
+                {
+                    this._viewModel.CacheImageFromStreamAsync(fileStream);
+                    BitmapImage bmp = new BitmapImage();
+                    bmp.DecodePixelHeight = (int)ImageControl.Height;
+                    bmp.DecodePixelWidth = (int)ImageControl.Width;
+                    await bmp.SetSourceAsync(fileStream);
+                    this.ImageControl.Source = bmp;
+                }
+            }
         }
 
         private async void CameraButton_Click(object sender, RoutedEventArgs e)

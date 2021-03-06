@@ -1,4 +1,4 @@
-using FaceDetection.Models;
+﻿using FaceDetection.Models;
 using FaceDetection.Utils;
 using System;
 using System.Collections.Generic;
@@ -13,5 +13,13 @@ namespace FaceDetection.ViewModels
 {
     public class MainPageViewModel : BaseNotifyPropertyChanged
     {
+        private FrameModel _frameModel = new FrameModel();
+
+        public async void CacheImageFromStreamAsync(IRandomAccessStream fileStream)
+        {
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(fileStream);
+            SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
+            this._frameModel.SoftwareBitmap = softwareBitmap;
+        }
     }
 }
