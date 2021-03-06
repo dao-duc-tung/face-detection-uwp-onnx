@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -60,6 +61,10 @@ namespace FaceDetection
             {
                 using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
                 {
+                    if (this._viewModel.IsPreviewing)
+                    {
+                        await StopPreviewingAsync();
+                    }
                     this._viewModel.CacheImageFromStreamAsync(fileStream);
                     BitmapImage bmp = new BitmapImage();
                     bmp.DecodePixelHeight = (int)ImageControl.Height;
@@ -72,19 +77,35 @@ namespace FaceDetection
 
         private async void CameraButton_Click(object sender, RoutedEventArgs e)
         {
+            if (!this._viewModel.IsPreviewing)
+            {
+                await StartPreviewingAsync();
+            } else
+            {
+                await StopPreviewingAsync();
+            }
+            UpdateCaptureControls();
+        }
 
+        private async Task StartPreviewingAsync()
+        {
+            this.ImageControl.Source = null;
+            await this._viewModel.InitCameraAsync();
+            PreviewControl.Source = this._viewModel.MediaCapture;
+            await this._viewModel.StartPreviewAsync();
+        }
+
+        private async Task StopPreviewingAsync()
+        {
+            await this._viewModel.StopPreviewAsync();
+            FacesCanvas.Children.Clear();
+            PreviewControl.Source = null;
         }
 
         private void FaceDetectionButton_Click(object sender, RoutedEventArgs e)
         {
             FacesCanvas.Children.Clear();
-            if (!this._viewModel.IsFaceDetectionEnabled)
-            {
-                this._viewModel.IsFaceDetectionEnabled = true;
-            } else
-            {
-                this._viewModel.IsFaceDetectionEnabled = false;
-            }
+            this._viewModel.IsFaceDetectionEnabled = !this._viewModel.IsFaceDetectionEnabled;
             UpdateCaptureControls();
         }
 

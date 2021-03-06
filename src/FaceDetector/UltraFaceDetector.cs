@@ -43,10 +43,9 @@ namespace FaceDetection.FaceDetector
 
         public async void LoadModel(StorageFile file)
         {
-            LearningModel learningModel = null;
             try
             {
-                learningModel = await LearningModel.LoadFromStorageFileAsync(file);
+                var learningModel = await LearningModel.LoadFromStorageFileAsync(file);
                 this._learningModel = learningModel;
                 this._session = new LearningModelSession(learningModel);
             }
