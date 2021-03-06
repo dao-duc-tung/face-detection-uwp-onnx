@@ -8,6 +8,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI;
@@ -39,7 +40,7 @@ namespace FaceDetection
             Loaded += OnLoaded;
         }
 
-        private async void OnLoaded(object sender, RoutedEventArgs e)
+        private void OnLoaded(object sender, RoutedEventArgs e)
         {
             _viewModel = App.MainPageViewModel;
             _viewModel.FaceDetected += _viewModel_FaceDetected;
@@ -60,11 +61,14 @@ namespace FaceDetection
             {
                 using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
                 {
-                    if (_viewModel.IsPreviewing)
+                    if (_viewModel.CameraControl.IsPreviewing)
                     {
                         await StopPreviewingAsync();
                     }
-                    _viewModel.CacheImageFromStreamAsync(fileStream);
+                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(fileStream);
+                    SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
+                    _viewModel.FrameModel.SoftwareBitmap = softwareBitmap;
+
                     BitmapImage bmp = new BitmapImage();
                     bmp.DecodePixelHeight = (int)ImageControl.Height;
                     bmp.DecodePixelWidth = (int)ImageControl.Width;
@@ -76,7 +80,7 @@ namespace FaceDetection
 
         private async void CameraButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!_viewModel.IsPreviewing)
+            if (!_viewModel.CameraControl.IsPreviewing)
             {
                 await StartPreviewingAsync();
             } else
@@ -90,7 +94,7 @@ namespace FaceDetection
         {
             ImageControl.Source = null;
             await _viewModel.InitCameraAsync();
-            PreviewControl.Source = _viewModel.MediaCapture;
+            PreviewControl.Source = _viewModel.CameraControl.MediaCapture;
             await _viewModel.StartPreviewAsync();
         }
 
