@@ -5,10 +5,51 @@
     xmlns:local="using:FaceDetection"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
 
-    <Grid>
+    <Page.Resources>
+        <SolidColorBrush x:Key="TranslucentBlackBrush" Color="Black" Opacity="0.3"/>
+    </Page.Resources>
 
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.Resources>
+            <Style TargetType="Button">
+                <Setter Property="Margin" Value="10,40"/>
+                <Setter Property="MinWidth" Value="80"/>
+                <Setter Property="MinHeight" Value="80"/>
+                <Setter Property="Background" Value="{StaticResource TranslucentBlackBrush}"/>
+            </Style>
+            <Style TargetType="Viewbox">
+                <Setter Property="MaxHeight" Value="40"/>
+                <Setter Property="MaxWidth" Value="40"/>
+            </Style>
+        </Grid.Resources>
+
+        <CaptureElement Name="PreviewControl" Stretch="Uniform"/>
+        <Image Name="ImageControl" Stretch="Uniform"/>
+        <Canvas>
+            <Canvas Name="FacesCanvas"/>
+        </Canvas>
+
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Name="PhotoButton" Click="PhotoButton_Click">
+                <Viewbox>
+                    <SymbolIcon Symbol="Pictures"/>
+                </Viewbox>
+            </Button>
+            <Button Name="CameraButton" Click="CameraButton_Click">
+                <Viewbox>
+                    <SymbolIcon Symbol="Camera"/>
+                </Viewbox>
+            </Button>
+            <Button Name="FaceDetectionButton" Click="FaceDetectionButton_Click">
+                <Viewbox>
+                    <Grid>
+                        <SymbolIcon Name="FaceDetectionDisabledIcon" Symbol="Contact" Visibility="Visible"/>
+                        <SymbolIcon Name="FaceDetectionEnabledIcon" Symbol="Contact2" Visibility="Collapsed"/>
+                    </Grid>
+                </Viewbox>
+            </Button>
+        </StackPanel>
     </Grid>
 </Page>
