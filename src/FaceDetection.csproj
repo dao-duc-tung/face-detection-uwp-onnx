@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -146,6 +146,7 @@
     <Compile Include="Utils\FaceBoundingBox.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\IConfig.cs" />
+    <Compile Include="Utils\MainConfig.cs" />
     <Compile Include="ViewModels\CameraControl.cs" />
     <Compile Include="Utils\ImageUtils.cs" />
     <Compile Include="ViewModels\FaceDetectionControl.cs" />
@@ -157,6 +158,9 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\MainConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\UltraFaceDetectorConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
