@@ -25,18 +25,20 @@ namespace FaceDetection.FaceDetector
 
     public sealed class UltraFaceDetector : IFaceDetector
     {
+        private UltraFaceDetectorConfig _config;
         private LearningModel _learningModel;
         private LearningModelSession _session;
-        // TODO: Load config of confidence_threshold, IoU_threshold
-        private float _confidence_threshold = 0.7f;
-        private float _iou_threshold = 0.0f;
-        private int LIMIT_MAX_FACES = 200;
 
         public event FaceDetectedEventHandler FaceDetected;
 
         public bool IsModelLoaded()
         {
             return _learningModel != null;
+        }
+
+        public UltraFaceDetector(UltraFaceDetectorConfig config)
+        {
+            _config = config;
         }
 
         public async Task LoadModel(StorageFile file)
@@ -147,7 +149,7 @@ namespace FaceDetection.FaceDetector
             var boxes = output.boxes.GetAsVectorView();
             var boxCandidates = FilterConfidences(confidences, boxes);
             var predictions = HardNMS(boxCandidates);
-            var picked = predictions.GetRange(0, Math.Min(predictions.Count, LIMIT_MAX_FACES));
+            var picked = predictions.GetRange(0, Math.Min(predictions.Count, _config.LimitMaxFaces));
             return picked;
         }
 
@@ -159,7 +161,7 @@ namespace FaceDetection.FaceDetector
                 if (i % 2 != 0)
                 {
                     float confidence = confidences[i];
-                    if (confidence > _confidence_threshold)
+                    if (confidence > _config.ConfidenceThreshold)
                     {
                         int boxIdx = i / 2 * 4;
                         FaceBoundingBox bb = new FaceBoundingBox()
@@ -193,7 +195,7 @@ namespace FaceDetection.FaceDetector
                 foreach (FaceBoundingBox box in remaining_boxes)
                 {
                     // Check IOU between top box and each remaining box
-                    if (Get_IOU(predictions[predictions.Count - 1], box) > _iou_threshold)
+                    if (Get_IOU(predictions[predictions.Count - 1], box) > _config.IoUThreshold)
                     {
                         boxCandidates.Remove(box);
                     }
