@@ -55,19 +55,19 @@
 
         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
             <Button Name="PhotoButton"
-                    Command="{x:Bind ViewModel.PhotoButtonClicked}">
+                    Command="{x:Bind ViewModel.LoadPhotoCmd}">
                 <Viewbox>
                     <SymbolIcon Symbol="Pictures"/>
                 </Viewbox>
             </Button>
             <Button Name="CameraButton" 
-                    Command="{x:Bind ViewModel.CameraButtonClicked}">
+                    Command="{x:Bind ViewModel.ToggleCameraCmd}">
                 <Viewbox>
                     <SymbolIcon Symbol="Camera"/>
                 </Viewbox>
             </Button>
             <Button Name="FaceDetectionButton"
-                    Command="{x:Bind ViewModel.FaceDetectionButtonClicked}">
+                    Command="{x:Bind ViewModel.ToggleFaceDetectionCmd}">
                 <Viewbox>
                     <Grid>
                         <SymbolIcon Name="FaceDetectionDisabledIcon" Symbol="Contact"/>
