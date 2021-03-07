@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -127,6 +127,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DistanceEstimator\FocalLengthDistanceEstimator.cs" />
     <Compile Include="DistanceEstimator\FocalLengthDistanceEstimatorConfig.cs" />
     <Compile Include="FaceDetector\IFaceDetector.cs" />
     <Compile Include="FaceDetector\UltraFaceDetector.cs" />
@@ -139,9 +140,11 @@
     <Compile Include="Utils\AppConfig.cs" />
     <Compile Include="Utils\BaseNotifyPropertyChanged.cs" />
     <Compile Include="Utils\ClassFactory.cs" />
+    <Compile Include="Utils\Constants.cs" />
     <Compile Include="Utils\CornerBoundingBox.cs" />
     <Compile Include="Utils\DelegateCommand.cs" />
     <Compile Include="Utils\FaceBoundingBox.cs" />
+    <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\IConfig.cs" />
     <Compile Include="ViewModels\CameraControl.cs" />
     <Compile Include="Utils\ImageUtils.cs" />
@@ -154,6 +157,12 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\UltraFaceDetectorConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\FocalLengthDistanceEstimatorConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
