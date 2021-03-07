@@ -11,6 +11,15 @@ namespace FaceDetection.Models
             get => _softwareBitmap;
             set
             {
+                if (value != null)
+                {
+                    if (value.BitmapPixelFormat != BitmapPixelFormat.Bgra8
+                    || value.BitmapAlphaMode != BitmapAlphaMode.Ignore
+                    || value.BitmapAlphaMode != BitmapAlphaMode.Premultiplied)
+                    {
+                        value = SoftwareBitmap.Convert(value, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
+                    }
+                }
                 SetProperty(ref _softwareBitmap, value);
             }
         }
