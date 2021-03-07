@@ -37,12 +37,6 @@ namespace FaceDetection
         public MainPage()
         {
             InitializeComponent();
-            Loaded += OnLoaded;
-        }
-
-        private async void OnLoaded(object sender, RoutedEventArgs e)
-        {
-            await ViewModel.LoadModelAsync();
         }
     }
 }
