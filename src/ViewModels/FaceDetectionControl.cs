@@ -2,16 +2,10 @@
 using FaceDetection.FaceDetector;
 using FaceDetection.Utils;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Shapes;
 
 namespace FaceDetection.ViewModels
 {

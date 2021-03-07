@@ -1,12 +1,8 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 
 namespace FaceDetection.Utils
