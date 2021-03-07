@@ -21,6 +21,24 @@ namespace FaceDetection.Utils
         public bool IsPreviewing { get; set; }
         public MediaCapture MediaCapture { get; set; }
 
+        public event TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> FrameArrived
+        {
+            add
+            {
+                lock(_frameReader)
+                {
+                    _frameReader.FrameArrived += value;
+                }
+            }
+            remove
+            {
+                lock (_frameReader)
+                {
+                    _frameReader.FrameArrived -= value;
+                }
+            }
+        }
+
         public async Task InitCameraAsync()
         {
             if (!_isInitialized)
@@ -51,18 +69,6 @@ namespace FaceDetection.Utils
             IsPreviewing = false;
             await MediaCapture.StopPreviewAsync();
             await _frameReader.StopAsync();
-        }
-
-        public void RegisterFrameArrivedHandler(TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> cb)
-        {
-            if (_frameReader == null) return;
-            _frameReader.FrameArrived += cb;
-        }
-
-        public void UnregisterFrameArrivedHandler(TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> cb)
-        {
-            if (_frameReader == null) return;
-            _frameReader.FrameArrived -= cb;
         }
 
         private async Task InitMediaCaptureAsync()

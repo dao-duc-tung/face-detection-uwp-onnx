@@ -33,7 +33,23 @@ namespace FaceDetection.ViewModels
         // TODO: Create Config to load modelFileName
         private string _modelFileName = "version-RFB-320.onnx";
         
-        public event FaceDetectedEventHandler FaceDetected;
+        public event FaceDetectedEventHandler FaceDetected
+        {
+            add
+            {
+                lock (_faceDetector)
+                {
+                    _faceDetector.FaceDetected += value;
+                }
+            }
+            remove
+            {
+                lock (_faceDetector)
+                {
+                    _faceDetector.FaceDetected -= value;
+                }
+            }
+        }
         public bool IsFaceDetectionEnabled
         {
             get => _isFaceDetectionEnabled;
@@ -103,7 +119,6 @@ namespace FaceDetection.ViewModels
             StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
             _faceDetector = new UltraFaceDetector();
             _faceDetector.LoadModel(file);
-            _faceDetector.FaceDetected += _faceDetector_FaceDetected;
         }
 
         private void SubscribeEvents()
@@ -128,11 +143,6 @@ namespace FaceDetection.ViewModels
             }
         }
 
-        private void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
-        {
-            FaceDetected?.Invoke(sender, faceBoundingBoxes, originalSize);
-        }
-
         public async Task InitCameraAsync()
         {
             await CameraControl.InitCameraAsync();
@@ -140,14 +150,14 @@ namespace FaceDetection.ViewModels
 
         public async Task StartPreviewAsync()
         {
-            CameraControl.RegisterFrameArrivedHandler(OnFrameArrived);
+            CameraControl.FrameArrived += OnFrameArrived;
             await CameraControl.StartPreviewAsync();
         }
 
         public async Task StopPreviewAsync()
         {
             await CameraControl.StopPreviewAsync();
-            CameraControl.UnregisterFrameArrivedHandler(OnFrameArrived);
+            CameraControl.FrameArrived -= OnFrameArrived;
         }
     }
 }

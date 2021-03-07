@@ -43,9 +43,8 @@ namespace FaceDetection
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
             _viewModel = App.MainPageViewModel;
-            _viewModel.FaceDetected += _viewModel_FaceDetected;
-            DataContext = _viewModel;
             await _viewModel.LoadModelAsync();
+            DataContext = _viewModel;
         }
 
         private async void PhotoButton_Click(object sender, RoutedEventArgs e)
@@ -110,6 +109,13 @@ namespace FaceDetection
         {
             FacesCanvas.Children.Clear();
             _viewModel.IsFaceDetectionEnabled = !_viewModel.IsFaceDetectionEnabled;
+            if (_viewModel.IsFaceDetectionEnabled)
+            {
+                _viewModel.FaceDetected += _viewModel_FaceDetected;
+            } else
+            {
+                _viewModel.FaceDetected -= _viewModel_FaceDetected;
+            }
             UpdateCaptureControls();
         }
 
