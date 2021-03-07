@@ -2,6 +2,7 @@
 using FaceDetection.FaceDetector;
 using FaceDetection.Utils;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
@@ -14,6 +15,9 @@ namespace FaceDetection.ViewModels
         private IFaceDetector _faceDetector;
         private int _detectingFlag;
         public bool IsFaceDetectionEnabled { get; set; } = false;
+
+        private Stopwatch _fpsStopwatch = new Stopwatch();
+        public float FPS { get; set; } = 0;
 
         public event FaceDetectedEventHandler FaceDetected
         {
@@ -44,7 +48,13 @@ namespace FaceDetection.ViewModels
 
             if (Interlocked.CompareExchange(ref _detectingFlag, 1, 0) == 0)
             {
+                _fpsStopwatch.Restart();
+
                 await _faceDetector.Detect(img);
+                
+                _fpsStopwatch.Stop();
+                FPS = 1.0f / (float)_fpsStopwatch.Elapsed.TotalSeconds;
+                
                 img.Dispose();
             }
             Interlocked.Exchange(ref _detectingFlag, 0);
