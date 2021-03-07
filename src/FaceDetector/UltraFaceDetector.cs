@@ -41,7 +41,7 @@ namespace FaceDetection.FaceDetector
             return _learningModel != null;
         }
 
-        public async void LoadModel(StorageFile file)
+        public async Task LoadModel(StorageFile file)
         {
             try
             {

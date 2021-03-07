@@ -15,7 +15,7 @@ namespace FaceDetection.FaceDetector
     public interface IFaceDetector
     {
         event FaceDetectedEventHandler FaceDetected;
-        void LoadModel(StorageFile file);
+        Task LoadModel(StorageFile file);
         bool IsModelLoaded();
         Task Detect(Mat input);
     }
