@@ -29,7 +29,8 @@ namespace FaceDetection.ViewModels
 
         public async Task LoadModelAsync(StorageFile file)
         {
-            _faceDetector = new UltraFaceDetector();
+            var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
+            _faceDetector = new UltraFaceDetector(config);
             await _faceDetector.LoadModel(file);
         }
 

@@ -1,7 +1,12 @@
-﻿using FaceDetection.ViewModels;
+﻿using FaceDetection.DistanceEstimator;
+using FaceDetection.FaceDetector;
+using FaceDetection.Utils;
+using FaceDetection.ViewModels;
 using System;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -13,7 +18,8 @@ namespace FaceDetection
     /// </summary>
     sealed partial class App : Application
     {
-        public static MainPageViewModel MainPageViewModel { get; } = new MainPageViewModel();
+        private static Lazy<MainPageViewModel> _mainPageViewModelLazy = new Lazy<MainPageViewModel>();
+        public static MainPageViewModel MainPageViewModel { get => _mainPageViewModelLazy.Value; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -21,8 +27,20 @@ namespace FaceDetection
         /// </summary>
         public App()
         {
+            Task.Run(LoadAppConfigAsync).Wait();
             InitializeComponent();
             Suspending += OnSuspending;
+        }
+
+        private async Task LoadAppConfigAsync()
+        {
+            var uri1 = FileUtils.GetUriByLocalFilePath(ConfigLocalPath.UltraFaceDetector);
+            var file1 = await StorageFile.GetFileFromApplicationUriAsync(uri1);
+            await AppConfig.Instance.RegisterConfig<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector, file1);
+
+            var uri2 = FileUtils.GetUriByLocalFilePath(ConfigLocalPath.FocalLengthDistanceEstimator);
+            var file2 = await StorageFile.GetFileFromApplicationUriAsync(uri2);
+            await AppConfig.Instance.RegisterConfig<FocalLengthDistanceEstimatorConfig>(ConfigName.FocalLengthDistanceEstimator, file2);
         }
 
         /// <summary>

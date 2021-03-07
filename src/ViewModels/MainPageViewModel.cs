@@ -1,4 +1,5 @@
 ﻿using FaceDetection.DistanceEstimator;
+using FaceDetection.FaceDetector;
 using FaceDetection.Models;
 using FaceDetection.Utils;
 using Microsoft.Toolkit.Uwp.Helpers;
@@ -26,8 +27,6 @@ namespace FaceDetection.ViewModels
         private FrameModel _frameModel { get; } = FrameModel.Instance;
         private CameraControl _cameraControl { get; } = new CameraControl();
         private FaceDetectionControl _faceDetectionControl { get; } = new FaceDetectionControl();
-        // TODO: Create Config to load modelFileName
-        private string _modelFileName = "version-RFB-320.onnx";
         private int _processingFlag;
 
         private Image _imageControl;
@@ -51,8 +50,7 @@ namespace FaceDetection.ViewModels
         }
 
         private Canvas _facesCanvas;
-        private FocalLengthBasedDistanceEstimator _distanceEstimator
-            = new FocalLengthBasedDistanceEstimator();
+        private FocalLengthDistanceEstimator _distanceEstimator;
 
         public ICommand ImageControlLoaded { get; set; }
         public ICommand PreviewControlLoaded { get; set; }
@@ -66,13 +64,23 @@ namespace FaceDetection.ViewModels
         {
             BindCommands();
             SubscribeEvents();
-            Task.Run(LoadModelAsync);
+            Task.Run(LoadModelAsync).Wait();
+            InitDistanceEstimator();
         }
 
         private async Task LoadModelAsync()
         {
-            var file = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Assets/{_modelFileName}"));
+            var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
+            var modelLocalPath = config.ModelLocalPath;
+            var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
+            var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
             await _faceDetectionControl.LoadModelAsync(file);
+        }
+
+        private void InitDistanceEstimator()
+        {
+            var config = (FocalLengthDistanceEstimatorConfig)AppConfig.Instance.GetConfig(ConfigName.FocalLengthDistanceEstimator);
+            _distanceEstimator = new FocalLengthDistanceEstimator(config);
         }
 
         private void BindCommands()
