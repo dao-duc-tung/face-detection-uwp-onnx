@@ -26,14 +26,6 @@
             </Style>
         </Grid.Resources>
 
-        <CaptureElement Name="PreviewControl" Stretch="Uniform">
-            <i:Interaction.Behaviors>
-                <core:EventTriggerBehavior EventName="Loaded">
-                    <core:InvokeCommandAction Command="{x:Bind ViewModel.PreviewControlLoaded}"
-                                              CommandParameter="{Binding ElementName=PreviewControl}"/>
-                </core:EventTriggerBehavior>
-            </i:Interaction.Behaviors>
-        </CaptureElement>
         <Image Name="ImageControl" Stretch="Uniform">
             <i:Interaction.Behaviors>
                 <core:EventTriggerBehavior EventName="Loaded">
