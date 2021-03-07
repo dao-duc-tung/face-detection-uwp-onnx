@@ -11,7 +11,7 @@ using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
 using Windows.Media.MediaProperties;
 
-namespace FaceDetection.Utils
+namespace FaceDetection.ViewModels
 {
     public class CameraControl
     {
