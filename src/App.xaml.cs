@@ -34,13 +34,9 @@ namespace FaceDetection
 
         private async Task LoadAppConfigAsync()
         {
-            var uri1 = FileUtils.GetUriByLocalFilePath(ConfigLocalPath.UltraFaceDetector);
-            var file1 = await StorageFile.GetFileFromApplicationUriAsync(uri1);
-            await AppConfig.Instance.RegisterConfig<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector, file1);
-
-            var uri2 = FileUtils.GetUriByLocalFilePath(ConfigLocalPath.FocalLengthDistanceEstimator);
-            var file2 = await StorageFile.GetFileFromApplicationUriAsync(uri2);
-            await AppConfig.Instance.RegisterConfig<FocalLengthDistanceEstimatorConfig>(ConfigName.FocalLengthDistanceEstimator, file2);
+            await FileUtils.ReadConfigFile<MainConfig>(ConfigName.Main, ConfigLocalPath.Main);
+            await FileUtils.ReadConfigFile<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector, ConfigLocalPath.UltraFaceDetector);
+            await FileUtils.ReadConfigFile<FocalLengthDistanceEstimatorConfig>(ConfigName.FocalLengthDistanceEstimator, ConfigLocalPath.FocalLengthDistanceEstimator);
         }
 
         /// <summary>
