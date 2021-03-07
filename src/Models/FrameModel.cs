@@ -1,22 +1,17 @@
 ﻿using FaceDetection.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 
 namespace FaceDetection.Models
 {
-    public class FrameModel : BaseNotifyPropertyChanged
+    public class FrameModel : SingletonNotifyPropertyChanged<FrameModel>
     {
         private SoftwareBitmap _softwareBitmap;
         public SoftwareBitmap SoftwareBitmap
         {
-            get => this._softwareBitmap;
+            get => _softwareBitmap;
             set
             {
-                SetProperty(ref this._softwareBitmap, value);
+                SetProperty(ref _softwareBitmap, value);
             }
         }
     }

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FaceDetection.Utils
 {
@@ -15,13 +10,13 @@ namespace FaceDetection.Utils
 		{
 			if (object.Equals(storage, value)) return false;
 			storage = value;
-			this.OnPropertyChanged(propertyName);
+			OnPropertyChanged(propertyName);
 			return true;
 		}
 
 		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
 		{
-			var eventHandler = this.PropertyChanged;
+			var eventHandler = PropertyChanged;
 			if (eventHandler != null)
 				eventHandler(this, new PropertyChangedEventArgs(propertyName));
 		}

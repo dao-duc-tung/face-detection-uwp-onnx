@@ -6,8 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.AI.MachineLearning;
 using Windows.Storage;
@@ -27,27 +25,29 @@ namespace FaceDetection.FaceDetector
 
     public sealed class UltraFaceDetector : IFaceDetector
     {
+        private UltraFaceDetectorConfig _config;
         private LearningModel _learningModel;
         private LearningModelSession _session;
-        // TODO: Load config of confidence_threshold, IoU_threshold
-        private float _confidence_threshold = 0.7f;
-        private float _iou_threshold = 0.0f;
-        private int LIMIT_MAX_FACES = 200;
 
         public event FaceDetectedEventHandler FaceDetected;
 
         public bool IsModelLoaded()
         {
-            return this._learningModel != null;
+            return _learningModel != null;
         }
 
-        public async void LoadModel(StorageFile file)
+        public UltraFaceDetector(UltraFaceDetectorConfig config)
+        {
+            _config = config;
+        }
+
+        public async Task LoadModel(StorageFile file)
         {
             try
             {
                 var learningModel = await LearningModel.LoadFromStorageFileAsync(file);
-                this._learningModel = learningModel;
-                this._session = new LearningModelSession(learningModel);
+                _learningModel = learningModel;
+                _session = new LearningModelSession(learningModel);
             }
             catch (Exception e)
             {
@@ -60,20 +60,19 @@ namespace FaceDetection.FaceDetector
             var input = Preprocess(originalImage);
 
             var output = new UltraFaceDetectorOutput();
-            var binding = new LearningModelBinding(this._session);
+            var binding = new LearningModelBinding(_session);
             binding.Bind("input", input.input);
             binding.Bind("scores", output.scores);
             binding.Bind("boxes", output.boxes);
-            LearningModelEvaluationResult result = await this._session.EvaluateAsync(binding, "0");
-            
+            LearningModelEvaluationResult result = await _session.EvaluateAsync(binding, "0");
+
             var faces = Postprocess(output);
-            this.RaiseFaceDetectedEvent(faces, originalImage.Size);
+            RaiseFaceDetectedEvent(faces, originalImage.Size);
         }
 
         private void RaiseFaceDetectedEvent(IReadOnlyList<FaceBoundingBox> faces, Size originalSize)
         {
-            if (this.FaceDetected == null) return;
-            this.FaceDetected(this, faces, originalSize);
+            FaceDetected?.Invoke(this, faces, originalSize);
         }
 
         private struct InputImageSettings
@@ -148,9 +147,9 @@ namespace FaceDetection.FaceDetector
         {
             var confidences = output.scores.GetAsVectorView();
             var boxes = output.boxes.GetAsVectorView();
-            var boxCandidates = this.FilterConfidences(confidences, boxes);
-            var predictions = this.HardNMS(boxCandidates);
-            var picked = predictions.GetRange(0, Math.Min(predictions.Count, this.LIMIT_MAX_FACES));
+            var boxCandidates = FilterConfidences(confidences, boxes);
+            var predictions = HardNMS(boxCandidates);
+            var picked = predictions.GetRange(0, Math.Min(predictions.Count, _config.LimitMaxFaces));
             return picked;
         }
 
@@ -162,7 +161,7 @@ namespace FaceDetection.FaceDetector
                 if (i % 2 != 0)
                 {
                     float confidence = confidences[i];
-                    if (confidence > this._confidence_threshold)
+                    if (confidence > _config.ConfidenceThreshold)
                     {
                         int boxIdx = i / 2 * 4;
                         FaceBoundingBox bb = new FaceBoundingBox()
@@ -196,7 +195,7 @@ namespace FaceDetection.FaceDetector
                 foreach (FaceBoundingBox box in remaining_boxes)
                 {
                     // Check IOU between top box and each remaining box
-                    if (Get_IOU(predictions[predictions.Count - 1], box) > this._iou_threshold)
+                    if (Get_IOU(predictions[predictions.Count - 1], box) > _config.IoUThreshold)
                     {
                         boxCandidates.Remove(box);
                     }
