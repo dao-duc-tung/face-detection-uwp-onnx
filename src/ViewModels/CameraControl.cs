@@ -43,9 +43,6 @@ namespace FaceDetection.ViewModels
             {
                 await InitMediaCaptureAsync();
             }
-            if (!_isInitialized) return;
-
-            await InitFrameReaderAsync();
         }
 
         public async Task StartPreviewAsync()
@@ -53,7 +50,6 @@ namespace FaceDetection.ViewModels
             try
             {
                 await _frameReader.StartAsync();
-                await MediaCapture.StartPreviewAsync();
                 IsPreviewing = true;
             }
             catch (FileLoadException)
@@ -65,7 +61,6 @@ namespace FaceDetection.ViewModels
         public async Task StopPreviewAsync()
         {
             IsPreviewing = false;
-            await MediaCapture.StopPreviewAsync();
             await _frameReader.StopAsync();
         }
 
@@ -85,26 +80,26 @@ namespace FaceDetection.ViewModels
             var settings = new MediaCaptureInitializationSettings
             {
                 VideoDeviceId = cameraDevice.Id,
-                MemoryPreference = MediaCaptureMemoryPreference.Cpu
+                SharingMode = MediaCaptureSharingMode.ExclusiveControl,
+                MemoryPreference = MediaCaptureMemoryPreference.Cpu,
+                StreamingCaptureMode = StreamingCaptureMode.Video,
             };
 
             try
             {
                 await MediaCapture.InitializeAsync(settings);
-                _isInitialized = true;
             }
             catch (UnauthorizedAccessException)
             {
                 Debug.WriteLine("The app was denied access to the camera");
+                return;
             }
-        }
 
-        private async Task InitFrameReaderAsync()
-        {
             var frameSource = MediaCapture.FrameSources.Where(
                 source => source.Value.Info.SourceKind == MediaFrameSourceKind.Color)
                 .First();
             _frameReader = await MediaCapture.CreateFrameReaderAsync(frameSource.Value, MediaEncodingSubtypes.Rgb32);
+            _isInitialized = true;
         }
 
         private static async Task<DeviceInformation> FindCameraDeviceByPanelAsync(Windows.Devices.Enumeration.Panel desiredPanel)
