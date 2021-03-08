@@ -23,17 +23,11 @@ namespace FaceDetection.ViewModels
         {
             add
             {
-                lock(_frameReader)
-                {
-                    _frameReader.FrameArrived += value;
-                }
+                _frameReader.FrameArrived += value;
             }
             remove
             {
-                lock (_frameReader)
-                {
-                    _frameReader.FrameArrived -= value;
-                }
+                _frameReader.FrameArrived -= value;
             }
         }
 
