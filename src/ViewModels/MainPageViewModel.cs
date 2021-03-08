@@ -6,7 +6,6 @@ using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -29,8 +28,10 @@ namespace FaceDetection.ViewModels
         private FrameModel _frameModel { get; } = FrameModel.Instance;
         private CameraControl _cameraControl { get; } = new CameraControl();
         private FaceDetectionControl _faceDetectionControl { get; } = new FaceDetectionControl();
+        private FocalLengthDistanceEstimator _distanceEstimator;
         private SolidColorBrush _canvasObjectColor = new SolidColorBrush(Colors.LimeGreen);
 
+        private Canvas _facesCanvas;
         private SoftwareBitmap _frameArrivedBackBuffer;
         private bool _isImageSourceUpdateRunning = false;
         private Image _imageControl;
@@ -40,36 +41,19 @@ namespace FaceDetection.ViewModels
             set => SetProperty(ref _imageControl, value);
         }
 
-        private Canvas _facesCanvas;
-        private FocalLengthDistanceEstimator _distanceEstimator;
-
         public ICommand ImageControlLoaded { get; set; }
         public ICommand FacesCanvasLoaded { get; set; }
         public ICommand LoadPhotoCmd { get; set; }
         public ICommand ToggleCameraCmd { get; set; }
         public ICommand ToggleFaceDetectionCmd { get; set; }
 
+        #region Init
         public MainPageViewModel()
         {
             BindCommands();
             SubscribeEvents();
             Task.Run(LoadModelAsync).Wait();
             InitDistanceEstimator();
-        }
-
-        private async Task LoadModelAsync()
-        {
-            var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
-            var modelLocalPath = config.ModelLocalPath;
-            var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
-            var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
-            await _faceDetectionControl.LoadModelAsync(file);
-        }
-
-        private void InitDistanceEstimator()
-        {
-            var config = (FocalLengthDistanceEstimatorConfig)AppConfig.Instance.GetConfig(ConfigName.FocalLengthDistanceEstimator);
-            _distanceEstimator = new FocalLengthDistanceEstimator(config);
         }
 
         private void BindCommands()
@@ -86,14 +70,23 @@ namespace FaceDetection.ViewModels
             _frameModel.PropertyChanged += _frameModel_PropertyChanged;
         }
 
-        private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async Task LoadModelAsync()
         {
-            if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
-            {
-                Task.Run(async () => await RunFaceDetection());
-            }
+            var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
+            var modelLocalPath = config.ModelLocalPath;
+            var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
+            var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
+            await _faceDetectionControl.LoadModelAsync(file);
         }
 
+        private void InitDistanceEstimator()
+        {
+            var config = (FocalLengthDistanceEstimatorConfig)AppConfig.Instance.GetConfig(ConfigName.FocalLengthDistanceEstimator);
+            _distanceEstimator = new FocalLengthDistanceEstimator(config);
+        }
+        #endregion Init
+
+        #region Button Controls
         private async Task LoadPhoto()
         {
             var picker = new FileOpenPicker();
@@ -120,6 +113,23 @@ namespace FaceDetection.ViewModels
             await ClearFacesCanvas();
         }
 
+        private async Task ToggleFaceDetection()
+        {
+            _faceDetectionControl.IsFaceDetectionEnabled = !_faceDetectionControl.IsFaceDetectionEnabled;
+            if (_faceDetectionControl.IsFaceDetectionEnabled)
+            {
+                _faceDetectionControl.FaceDetected += _faceDetector_FaceDetected;
+                await RunFaceDetection();
+            }
+            else
+            {
+                _faceDetectionControl.FaceDetected -= _faceDetector_FaceDetected;
+            }
+            await ClearFacesCanvas();
+        }
+        #endregion Button Controls
+
+        #region Camera Control
         private async Task TurnOnCameraPreview()
         {
             if (ImageControl.Source == null)
@@ -138,27 +148,6 @@ namespace FaceDetection.ViewModels
             await DispatcherHelper.ExecuteOnUIThreadAsync(() => { ImageControl.Source = null; });
         }
 
-        private async Task ToggleFaceDetection()
-        {
-            _faceDetectionControl.IsFaceDetectionEnabled = !_faceDetectionControl.IsFaceDetectionEnabled;
-            if (_faceDetectionControl.IsFaceDetectionEnabled)
-            {
-                _faceDetectionControl.FaceDetected += _faceDetector_FaceDetected;
-                await RunFaceDetection();
-            } else
-            {
-                _faceDetectionControl.FaceDetected -= _faceDetector_FaceDetected;
-            }
-            await ClearFacesCanvas();
-        }
-
-        private async Task RunFaceDetection()
-        {
-            var bmp = _frameModel.SoftwareBitmap;
-            if (bmp == null) return;
-            await _faceDetectionControl.RunFaceDetection(bmp);
-        }
-
         private async Task InitCameraAsync() => await _cameraControl.InitCameraAsync();
 
         private async Task StartPreviewAsync()
@@ -172,126 +161,6 @@ namespace FaceDetection.ViewModels
             _cameraControl.FrameArrived -= OnFrameArrived;
             await _cameraControl.StopPreviewAsync();
         }
-
-        private async void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
-        {
-            await DispatcherHelper.ExecuteOnUIThreadAsync(() => HighlightDetectedFaces(faceBoundingBoxes, originalSize));
-        }
-
-        private void HighlightDetectedFaces(IReadOnlyList<FaceBoundingBox> faces, System.Drawing.Size originalSize)
-        {
-            _facesCanvas.Children.Clear();
-            var IsBoxSizeDisplayed = ((MainConfig)AppConfig.Instance.GetConfig(ConfigName.Main)).IsBoxSizeDisplayed;
-            for (int i = 0; i < faces.Count; ++i)
-            {
-                var bb = FaceDetectionControl.ScaleBoundingBox(faces[i], originalSize);
-                Rectangle faceBB = ConvertPreviewToUiRectangle(bb, originalSize);
-                faceBB.StrokeThickness = 2;
-                faceBB.Stroke = _canvasObjectColor;
-                _facesCanvas.Children.Add(faceBB);
-
-                TextBlock distance = new TextBlock();
-                distance.Text = _distanceEstimator.ComputeDistance(faces[i]).ToString("n0") + " cm";
-                distance.Foreground = _canvasObjectColor;
-                Canvas.SetLeft(distance, Canvas.GetLeft(faceBB) + 5);
-                Canvas.SetTop(distance, Canvas.GetTop(faceBB));
-                _facesCanvas.Children.Add(distance);
-
-                if (_faceDetectionControl.IsFaceDetectionEnabled)
-                {
-                    TextBlock faceDetectionFPS = new TextBlock();
-                    faceDetectionFPS.Text = $"Face Detection FPS: {_faceDetectionControl.FPS.ToString("n2")}";
-                    faceDetectionFPS.Foreground = _canvasObjectColor;
-                    Canvas.SetLeft(faceDetectionFPS, 20);
-                    Canvas.SetTop(faceDetectionFPS, 20);
-                    _facesCanvas.Children.Add(faceDetectionFPS);
-                }
-
-                if (IsBoxSizeDisplayed)
-                {
-                    TextBlock origSize = new TextBlock();
-                    origSize.Text = $"Orig Size: {faces[i].Width.ToString("n2")} x {faces[i].Height.ToString("n2")}";
-                    origSize.Foreground = _canvasObjectColor;
-                    Canvas.SetLeft(origSize, Canvas.GetLeft(faceBB));
-                    Canvas.SetTop(origSize, Canvas.GetTop(faceBB) - 40);
-                    _facesCanvas.Children.Add(origSize);
-
-                    TextBlock scaledSize = new TextBlock();
-                    scaledSize.Text = $"Scaled Size: {faceBB.Width.ToString("n2")} x {faceBB.Height.ToString("n2")}";
-                    scaledSize.Foreground = _canvasObjectColor;
-                    Canvas.SetLeft(scaledSize, Canvas.GetLeft(faceBB));
-                    Canvas.SetTop(scaledSize, Canvas.GetTop(faceBB) - 20);
-                    _facesCanvas.Children.Add(scaledSize);
-
-                }
-            }
-        }
-
-        private Rectangle ConvertPreviewToUiRectangle(FaceBoundingBox faceBox, System.Drawing.Size streamSize)
-        {
-            var result = new Rectangle();
-            double streamWidth = streamSize.Width;
-            double streamHeight = streamSize.Height;
-
-            // If there is no available information about the preview, return an empty rectangle, as re - scaling to the screen coordinates will be impossible
-            // Similarly, if any of the dimensions is zero(which would only happen in an error case) return an empty rectangle
-            if (streamWidth == 0 || streamHeight == 0) return result;
-
-            // Get the rectangle that is occupied by the actual video feed
-            var currWindowFrame = Window.Current.Bounds;
-            var windowSize = new Size(currWindowFrame.Width, currWindowFrame.Height);
-            var previewInUI = GetDisplayRectInControl(streamSize, windowSize);
-            var scaleWidth = previewInUI.Width / streamWidth;
-            var scaleHeight = previewInUI.Height / streamHeight;
-
-            //Scale the width and height from preview stream coordinates to window coordinates
-            result.Width = faceBox.Width * scaleWidth;
-            result.Height = faceBox.Height * scaleHeight;
-
-            // Scale the X and Y coordinates from preview stream coordinates to window coordinates
-            var x = previewInUI.X + faceBox.X0 * scaleWidth;
-            var y = previewInUI.Y + faceBox.Y0 * scaleHeight;
-            Canvas.SetLeft(result, x);
-            Canvas.SetTop(result, y);
-
-            return result;
-        }
-
-        private Rect GetDisplayRectInControl(System.Drawing.Size streamSize, Size windowSize)
-        {
-            var result = new Rect();
-            // In case this function is called before everything is initialized correctly, return an empty result
-            if (windowSize == null || windowSize.Height < 1 || windowSize.Width < 1 ||
-                streamSize.Height == 0 || streamSize.Width == 0) return result;
-
-            var streamWidth = streamSize.Width;
-            var streamHeight = streamSize.Height;
-
-            // Start by assuming the preview display area in the control spans the entire width and height both (this is corrected in the next if for the necessary dimension)
-            var actualWidth = windowSize.Width;
-            var actualHeight = windowSize.Height;
-            result.Width = actualWidth;
-            result.Height = actualHeight;
-
-            // If UI is "wider" than preview, letterboxing will be on the sides
-            if ((actualWidth / actualHeight > streamWidth / (double)streamHeight))
-            {
-                var scale = actualHeight / streamHeight;
-                var scaledWidth = streamWidth * scale;
-                result.X = (actualWidth - scaledWidth) / 2.0;
-                result.Width = scaledWidth;
-            }
-            else // Preview stream is "wider" than UI, so letterboxing will be on the top+bottom
-            {
-                var scale = actualWidth / streamWidth;
-                var scaledHeight = streamHeight * scale;
-                result.Y = (actualHeight - scaledHeight) / 2.0;
-                result.Height = scaledHeight;
-            }
-            return result;
-        }
-
-        private async Task ClearFacesCanvas() => await DispatcherHelper.ExecuteOnUIThreadAsync(() => _facesCanvas.Children.Clear());
 
         private void OnFrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args)
         {
@@ -332,5 +201,127 @@ namespace FaceDetection.ViewModels
                 }
             }
         }
+        #endregion Camera Control
+
+        #region Face Detection Control
+        private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
+            {
+                Task.Run(async () => await RunFaceDetection());
+            }
+        }
+
+        private async void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
+        {
+            await DispatcherHelper.ExecuteOnUIThreadAsync(() => HighlightDetectedFaces(faceBoundingBoxes, originalSize));
+        }
+
+        private async Task RunFaceDetection()
+        {
+            var bmp = _frameModel.SoftwareBitmap;
+            if (bmp == null) return;
+            await _faceDetectionControl.RunFaceDetection(bmp);
+        }
+
+        private void HighlightDetectedFaces(IReadOnlyList<FaceBoundingBox> faces, System.Drawing.Size originalSize)
+        {
+            _facesCanvas.Children.Clear();
+            var IsBoxSizeDisplayed = ((MainConfig)AppConfig.Instance.GetConfig(ConfigName.Main)).IsBoxSizeDisplayed;
+            for (int i = 0; i < faces.Count; ++i)
+            {
+                var bb = FaceDetectionControl.ScaleBoundingBox(faces[i], originalSize);
+                Rectangle faceBB = ConvertPreviewToUiRectangle(bb, originalSize);
+                faceBB.StrokeThickness = 2;
+                faceBB.Stroke = _canvasObjectColor;
+                _facesCanvas.Children.Add(faceBB);
+
+                var distStr = _distanceEstimator.ComputeDistance(faces[i]).ToString("n0") + " cm";
+                TextBlock distance = UIUtils.CreateTextBlock(distStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB));
+                _facesCanvas.Children.Add(distance);
+
+                if (_faceDetectionControl.IsFaceDetectionEnabled)
+                {
+                    var fpsStr = $"Face Detection FPS: {_faceDetectionControl.FPS.ToString("n2")}";
+                    TextBlock faceDetectionFPS = UIUtils.CreateTextBlock(fpsStr, _canvasObjectColor, 20, 20);
+                    _facesCanvas.Children.Add(faceDetectionFPS);
+                }
+
+                if (IsBoxSizeDisplayed)
+                {
+                    var origSizeStr = $"Orig Size: {faces[i].Width.ToString("n2")} x {faces[i].Height.ToString("n2")}";
+                    TextBlock origSize = UIUtils.CreateTextBlock(origSizeStr, _canvasObjectColor, Canvas.GetLeft(faceBB), Canvas.GetTop(faceBB) - 40);
+                    _facesCanvas.Children.Add(origSize);
+
+                    var scaledSizeStr= $"Scaled Size: {faceBB.Width.ToString("n2")} x {faceBB.Height.ToString("n2")}";
+                    TextBlock scaledSize = UIUtils.CreateTextBlock(scaledSizeStr, _canvasObjectColor, Canvas.GetLeft(faceBB), Canvas.GetTop(faceBB) - 20);
+                    _facesCanvas.Children.Add(scaledSize);
+                }
+            }
+        }
+
+        private Rectangle ConvertPreviewToUiRectangle(FaceBoundingBox faceBox, System.Drawing.Size streamSize)
+        {
+            var result = new Rectangle();
+            double streamWidth = streamSize.Width;
+            double streamHeight = streamSize.Height;
+
+            if (streamWidth == 0 || streamHeight == 0) return result;
+
+            // Get the rectangle that is occupied by the actual video feed
+            var currWindowFrame = Window.Current.Bounds;
+            var windowSize = new Size(currWindowFrame.Width, currWindowFrame.Height);
+            var previewInUI = GetDisplayRectInControl(streamSize, windowSize);
+            var scaleWidth = previewInUI.Width / streamWidth;
+            var scaleHeight = previewInUI.Height / streamHeight;
+
+            //Scale the width and height from preview stream coordinates to window coordinates
+            result.Width = faceBox.Width * scaleWidth;
+            result.Height = faceBox.Height * scaleHeight;
+
+            // Scale the X and Y coordinates from preview stream coordinates to window coordinates
+            var x = previewInUI.X + faceBox.X0 * scaleWidth;
+            var y = previewInUI.Y + faceBox.Y0 * scaleHeight;
+            Canvas.SetLeft(result, x);
+            Canvas.SetTop(result, y);
+
+            return result;
+        }
+
+        private Rect GetDisplayRectInControl(System.Drawing.Size streamSize, Size windowSize)
+        {
+            var result = new Rect();
+            if (windowSize.Height < 1 || windowSize.Width < 1 ||
+                streamSize.Height == 0 || streamSize.Width == 0) return result;
+
+            var streamWidth = streamSize.Width;
+            var streamHeight = streamSize.Height;
+
+            // Start by assuming the preview display area in the control spans entire width and height
+            var actualWidth = windowSize.Width;
+            var actualHeight = windowSize.Height;
+            result.Width = actualWidth;
+            result.Height = actualHeight;
+
+            // If UI is "wider" than preview, letterboxing will be on the sides
+            if ((actualWidth / actualHeight > streamWidth / (double)streamHeight))
+            {
+                var scale = actualHeight / streamHeight;
+                var scaledWidth = streamWidth * scale;
+                result.X = (actualWidth - scaledWidth) / 2.0;
+                result.Width = scaledWidth;
+            }
+            else // Preview stream is "wider" than UI, so letterboxing will be on the top+bottom
+            {
+                var scale = actualWidth / streamWidth;
+                var scaledHeight = streamHeight * scale;
+                result.Y = (actualHeight - scaledHeight) / 2.0;
+                result.Height = scaledHeight;
+            }
+            return result;
+        }
+
+        private async Task ClearFacesCanvas() => await DispatcherHelper.ExecuteOnUIThreadAsync(() => _facesCanvas.Children.Clear());
+        #endregion Face Detection Control
     }
 }
