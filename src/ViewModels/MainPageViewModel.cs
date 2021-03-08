@@ -32,7 +32,7 @@ namespace FaceDetection.ViewModels
         private SolidColorBrush _canvasObjectColor = new SolidColorBrush(Colors.LimeGreen);
 
         private Canvas _facesCanvas;
-        private SoftwareBitmap _frameArrivedBackBuffer;
+        private SoftwareBitmap _imageBuffer;
         private bool _isImageSourceUpdateRunning = false;
         private Image _imageControl;
         public Image ImageControl
@@ -86,7 +86,7 @@ namespace FaceDetection.ViewModels
         }
         #endregion Init
 
-        #region Button Controls
+        #region Preview Control
         private async Task LoadPhoto()
         {
             var picker = new FileOpenPicker();
@@ -97,12 +97,18 @@ namespace FaceDetection.ViewModels
             picker.FileTypeFilter.Add(".png");
             StorageFile file = await picker.PickSingleFileAsync();
             if (file == null) return;
+            if (_cameraControl.IsPreviewing) await TurnOffCameraPreview();
             using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
             {
-                if (_cameraControl.IsPreviewing) await TurnOffCameraPreview();
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(fileStream);
-                SoftwareBitmap softwareBitmap = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
-                _frameModel.SoftwareBitmap = softwareBitmap;
+                SoftwareBitmap swBmp = await decoder.GetSoftwareBitmapAsync(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
+                _frameModel.SoftwareBitmap = swBmp;
+
+                BitmapImage bmp = new BitmapImage();
+                bmp.DecodePixelHeight = (int)ImageControl.Height;
+                bmp.DecodePixelWidth = (int)ImageControl.Width;
+                await bmp.SetSourceAsync(fileStream);
+                ImageControl.Source = bmp;
             }
         }
 
@@ -113,31 +119,9 @@ namespace FaceDetection.ViewModels
             await ClearFacesCanvas();
         }
 
-        private async Task ToggleFaceDetection()
-        {
-            _faceDetectionControl.IsFaceDetectionEnabled = !_faceDetectionControl.IsFaceDetectionEnabled;
-            if (_faceDetectionControl.IsFaceDetectionEnabled)
-            {
-                _faceDetectionControl.FaceDetected += _faceDetector_FaceDetected;
-                await RunFaceDetection();
-            }
-            else
-            {
-                _faceDetectionControl.FaceDetected -= _faceDetector_FaceDetected;
-            }
-            await ClearFacesCanvas();
-        }
-        #endregion Button Controls
-
-        #region Camera Control
         private async Task TurnOnCameraPreview()
         {
-            if (ImageControl.Source == null)
-            {
-                await DispatcherHelper.ExecuteOnUIThreadAsync(() => {
-                    ImageControl.Source = new SoftwareBitmapSource();
-                });
-            }
+            ImageControl.Source = new SoftwareBitmapSource();
             await InitCameraAsync();
             await StartPreviewAsync();
         }
@@ -145,7 +129,7 @@ namespace FaceDetection.ViewModels
         private async Task TurnOffCameraPreview()
         {
             await StopPreviewAsync();
-            await DispatcherHelper.ExecuteOnUIThreadAsync(() => { ImageControl.Source = null; });
+            ImageControl.Source = null;
         }
 
         private async Task InitCameraAsync() => await _cameraControl.InitCameraAsync();
@@ -176,9 +160,10 @@ namespace FaceDetection.ViewModels
                         bmp = SoftwareBitmap.Convert(bmp, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
                     }
                     // Swap the processed frame to _backBuffer and dispose of the unused image.
-                    bmp = Interlocked.Exchange(ref _frameArrivedBackBuffer, bmp);
+                    bmp = Interlocked.Exchange(ref _imageBuffer, bmp);
                     bmp?.Dispose();
 
+                    // Changes to XAML ImageElement must happen on UI thread through Dispatcher
                     var task = DispatcherHelper.ExecuteOnUIThreadAsync(async () => {
                         // Don't let two copies of this task run at the same time.
                         if (_isImageSourceUpdateRunning) return;
@@ -188,11 +173,11 @@ namespace FaceDetection.ViewModels
                         SoftwareBitmap checkingBmp = null, latestBmp = null;
                         while (true)
                         {
-                            checkingBmp = Interlocked.Exchange(ref _frameArrivedBackBuffer, null);
+                            checkingBmp = Interlocked.Exchange(ref _imageBuffer, null);
                             if (checkingBmp == null) break;
                             latestBmp = checkingBmp;
                             var imageSource = (SoftwareBitmapSource)ImageControl.Source;
-                            await imageSource.SetBitmapAsync(latestBmp);
+                            await imageSource?.SetBitmapAsync(latestBmp);
                         }
                         if (latestBmp != null) _frameModel.SoftwareBitmap = latestBmp;
 
@@ -201,9 +186,24 @@ namespace FaceDetection.ViewModels
                 }
             }
         }
-        #endregion Camera Control
+        #endregion Preview Control
 
         #region Face Detection Control
+        private async Task ToggleFaceDetection()
+        {
+            _faceDetectionControl.IsFaceDetectionEnabled = !_faceDetectionControl.IsFaceDetectionEnabled;
+            if (_faceDetectionControl.IsFaceDetectionEnabled)
+            {
+                _faceDetectionControl.FaceDetected += _faceDetector_FaceDetected;
+                await RunFaceDetection();
+            }
+            else
+            {
+                _faceDetectionControl.FaceDetected -= _faceDetector_FaceDetected;
+                await ClearFacesCanvas();
+            }
+        }
+
         private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
@@ -240,7 +240,7 @@ namespace FaceDetection.ViewModels
                 TextBlock distance = UIUtils.CreateTextBlock(distStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB));
                 _facesCanvas.Children.Add(distance);
 
-                if (_faceDetectionControl.IsFaceDetectionEnabled)
+                if (_faceDetectionControl.IsFaceDetectionEnabled && _cameraControl.IsPreviewing)
                 {
                     var fpsStr = $"Face Detection FPS: {_faceDetectionControl.FPS.ToString("n2")}";
                     TextBlock faceDetectionFPS = UIUtils.CreateTextBlock(fpsStr, _canvasObjectColor, 20, 20);
