@@ -1,9 +1,7 @@
 ﻿using Emgu.CV;
 using FaceDetection.FaceDetector;
 using FaceDetection.Utils;
-using System;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -13,7 +11,7 @@ namespace FaceDetection.ViewModels
     public class FaceDetectionControl
     {
         private IFaceDetector _faceDetector;
-        private int _detectingFlag;
+        private bool _isDetecting;
         public bool IsFaceDetectionEnabled { get; set; } = false;
 
         private Stopwatch _fpsStopwatch = new Stopwatch();
@@ -38,7 +36,7 @@ namespace FaceDetection.ViewModels
             await _faceDetector.LoadModel(file);
         }
 
-        public async void RunFaceDetection(SoftwareBitmap bmp)
+        public async Task RunFaceDetection(SoftwareBitmap bmp)
         {
             if (!IsFaceDetectionEnabled || _faceDetector == null) return;
             else if (_faceDetector != null && !_faceDetector.IsModelLoaded()) return;
@@ -46,18 +44,16 @@ namespace FaceDetection.ViewModels
             Mat img = ImageUtils.ConvertSoftwareBitmapToMat(bmp);
             if (img == null) return;
 
-            if (Interlocked.CompareExchange(ref _detectingFlag, 1, 0) == 0)
-            {
-                _fpsStopwatch.Restart();
+            if (_isDetecting) return;
+            _isDetecting = true;
 
-                await _faceDetector.Detect(img);
-                
-                _fpsStopwatch.Stop();
-                FPS = 1.0f / (float)_fpsStopwatch.Elapsed.TotalSeconds;
-                
-                img.Dispose();
-            }
-            Interlocked.Exchange(ref _detectingFlag, 0);
+            _fpsStopwatch.Restart();
+            await _faceDetector.Detect(img);
+            _fpsStopwatch.Stop();
+            FPS = 1.0f / (float)_fpsStopwatch.Elapsed.TotalSeconds;
+            img.Dispose();
+            
+            _isDetecting = false;
         }
 
         public static FaceBoundingBox ScaleBoundingBox(FaceBoundingBox origBB, System.Drawing.Size originalSize)
