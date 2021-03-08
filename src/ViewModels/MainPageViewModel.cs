@@ -29,17 +29,15 @@ namespace FaceDetection.ViewModels
         private FrameModel _frameModel { get; } = FrameModel.Instance;
         private CameraControl _cameraControl { get; } = new CameraControl();
         private FaceDetectionControl _faceDetectionControl { get; } = new FaceDetectionControl();
-        private int _processingFlag;
         private SolidColorBrush _canvasObjectColor = new SolidColorBrush(Colors.LimeGreen);
 
+        private SoftwareBitmap _frameArrivedBackBuffer;
+        private bool _isImageSourceUpdateRunning = false;
         private Image _imageControl;
         public Image ImageControl
         {
             get => _imageControl;
-            set
-            {
-                SetProperty(ref _imageControl, value);
-            }
+            set => SetProperty(ref _imageControl, value);
         }
 
         private Canvas _facesCanvas;
@@ -92,8 +90,7 @@ namespace FaceDetection.ViewModels
         {
             if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
             {
-                RunFaceDetection();
-                Task.Run(UpdateImageSource);
+                Task.Run(async () => await RunFaceDetection());
             }
         }
 
@@ -116,14 +113,6 @@ namespace FaceDetection.ViewModels
             }
         }
 
-        private async Task UpdateImageSource()
-        {
-            await DispatcherHelper.ExecuteOnUIThreadAsync(async () => {
-                if (ImageControl.Source == null) ImageControl.Source = new SoftwareBitmapSource();
-                await ((SoftwareBitmapSource)ImageControl.Source).SetBitmapAsync(_frameModel.SoftwareBitmap);
-            });
-        }
-
         private async Task ToggleCamera()
         {
             if (!_cameraControl.IsPreviewing) await TurnOnCameraPreview();
@@ -133,6 +122,12 @@ namespace FaceDetection.ViewModels
 
         private async Task TurnOnCameraPreview()
         {
+            if (ImageControl.Source == null)
+            {
+                await DispatcherHelper.ExecuteOnUIThreadAsync(() => {
+                    ImageControl.Source = new SoftwareBitmapSource();
+                });
+            }
             await InitCameraAsync();
             await StartPreviewAsync();
         }
@@ -149,7 +144,7 @@ namespace FaceDetection.ViewModels
             if (_faceDetectionControl.IsFaceDetectionEnabled)
             {
                 _faceDetectionControl.FaceDetected += _faceDetector_FaceDetected;
-                RunFaceDetection();
+                await RunFaceDetection();
             } else
             {
                 _faceDetectionControl.FaceDetected -= _faceDetector_FaceDetected;
@@ -157,25 +152,25 @@ namespace FaceDetection.ViewModels
             await ClearFacesCanvas();
         }
 
-        private void RunFaceDetection()
+        private async Task RunFaceDetection()
         {
             var bmp = _frameModel.SoftwareBitmap;
             if (bmp == null) return;
-            _faceDetectionControl.RunFaceDetection(bmp);
+            await _faceDetectionControl.RunFaceDetection(bmp);
         }
 
         private async Task InitCameraAsync() => await _cameraControl.InitCameraAsync();
 
         private async Task StartPreviewAsync()
         {
-            _cameraControl.FrameArrived += OnFrameArrived;
             await _cameraControl.StartPreviewAsync();
+            _cameraControl.FrameArrived += OnFrameArrived;
         }
 
         private async Task StopPreviewAsync()
         {
-            await _cameraControl.StopPreviewAsync();
             _cameraControl.FrameArrived -= OnFrameArrived;
+            await _cameraControl.StopPreviewAsync();
         }
 
         private async void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
@@ -277,7 +272,7 @@ namespace FaceDetection.ViewModels
             var actualHeight = windowSize.Height;
             result.Width = actualWidth;
             result.Height = actualHeight;
-            
+
             // If UI is "wider" than preview, letterboxing will be on the sides
             if ((actualWidth / actualHeight > streamWidth / (double)streamHeight))
             {
@@ -300,17 +295,41 @@ namespace FaceDetection.ViewModels
 
         private void OnFrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args)
         {
-            if (Interlocked.CompareExchange(ref _processingFlag, 1, 0) == 0)
+            using (var frame = sender.TryAcquireLatestFrame())
             {
-                using (var frame = sender.TryAcquireLatestFrame())
-                using (var bmp = frame?.VideoMediaFrame?.SoftwareBitmap)
+                var bmp = frame?.VideoMediaFrame?.SoftwareBitmap;
+                if (bmp != null)
                 {
-                    if (bmp != null)
+                    if (bmp.BitmapPixelFormat != BitmapPixelFormat.Bgra8
+                        || bmp.BitmapAlphaMode != BitmapAlphaMode.Ignore
+                        || bmp.BitmapAlphaMode != BitmapAlphaMode.Premultiplied)
                     {
-                        _frameModel.SoftwareBitmap = bmp;
+                        bmp = SoftwareBitmap.Convert(bmp, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
                     }
+                    // Swap the processed frame to _backBuffer and dispose of the unused image.
+                    bmp = Interlocked.Exchange(ref _frameArrivedBackBuffer, bmp);
+                    bmp?.Dispose();
+
+                    var task = DispatcherHelper.ExecuteOnUIThreadAsync(async () => {
+                        // Don't let two copies of this task run at the same time.
+                        if (_isImageSourceUpdateRunning) return;
+                        _isImageSourceUpdateRunning = true;
+
+                        // Keep draining frames from the backbuffer until the backbuffer is empty.
+                        SoftwareBitmap checkingBmp = null, latestBmp = null;
+                        while (true)
+                        {
+                            checkingBmp = Interlocked.Exchange(ref _frameArrivedBackBuffer, null);
+                            if (checkingBmp == null) break;
+                            latestBmp = checkingBmp;
+                            var imageSource = (SoftwareBitmapSource)ImageControl.Source;
+                            await imageSource.SetBitmapAsync(latestBmp);
+                        }
+                        if (latestBmp != null) _frameModel.SoftwareBitmap = latestBmp;
+
+                        _isImageSourceUpdateRunning = false;
+                    });
                 }
-                Interlocked.Exchange(ref _processingFlag, 0);
             }
         }
     }
