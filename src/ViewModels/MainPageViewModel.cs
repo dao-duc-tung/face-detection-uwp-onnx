@@ -31,15 +31,10 @@ namespace FaceDetection.ViewModels
         private FocalLengthDistanceEstimator _distanceEstimator;
         private SolidColorBrush _canvasObjectColor = new SolidColorBrush(Colors.LimeGreen);
 
+        private Image _imageControl;
         private Canvas _facesCanvas;
         private SoftwareBitmap _imageBuffer;
         private bool _isImageSourceUpdateRunning = false;
-        private Image _imageControl;
-        public Image ImageControl
-        {
-            get => _imageControl;
-            set => SetProperty(ref _imageControl, value);
-        }
 
         public ICommand ImageControlLoaded { get; set; }
         public ICommand FacesCanvasLoaded { get; set; }
@@ -98,6 +93,8 @@ namespace FaceDetection.ViewModels
             StorageFile file = await picker.PickSingleFileAsync();
             if (file == null) return;
             if (_cameraControl.IsPreviewing) await TurnOffCameraPreview();
+            _imageControl.FlowDirection = FlowDirection.LeftToRight;
+
             using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
             {
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(fileStream);
@@ -105,34 +102,35 @@ namespace FaceDetection.ViewModels
                 _frameModel.SoftwareBitmap = swBmp;
 
                 BitmapImage bmp = new BitmapImage();
-                bmp.DecodePixelHeight = (int)ImageControl.Height;
-                bmp.DecodePixelWidth = (int)ImageControl.Width;
+                bmp.DecodePixelHeight = (int)_imageControl.Height;
+                bmp.DecodePixelWidth = (int)_imageControl.Width;
                 await bmp.SetSourceAsync(fileStream);
-                ImageControl.Source = bmp;
+                _imageControl.Source = bmp;
             }
         }
 
         private async Task ToggleCamera()
         {
-            if (!_cameraControl.IsPreviewing) await TurnOnCameraPreview();
+            if (!_cameraControl.IsPreviewing)
+            {
+                await TurnOnCameraPreview();
+                _imageControl.FlowDirection = _cameraControl.MirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+            }
             else await TurnOffCameraPreview();
             await ClearFacesCanvas();
         }
 
         private async Task TurnOnCameraPreview()
         {
-            ImageControl.Source = new SoftwareBitmapSource();
-            await InitCameraAsync();
+            _imageControl.Source = new SoftwareBitmapSource();
             await StartPreviewAsync();
         }
 
         private async Task TurnOffCameraPreview()
         {
             await StopPreviewAsync();
-            ImageControl.Source = null;
+            _imageControl.Source = null;
         }
-
-        private async Task InitCameraAsync() => await _cameraControl.InitCameraAsync();
 
         private async Task StartPreviewAsync()
         {
@@ -144,6 +142,11 @@ namespace FaceDetection.ViewModels
         {
             _cameraControl.FrameArrived -= OnFrameArrived;
             await _cameraControl.StopPreviewAsync();
+        }
+
+        public async Task CleanOnSuspendingAsync()
+        {
+            await _cameraControl.CleanupCameraAsync();
         }
 
         private void OnFrameArrived(MediaFrameReader sender, MediaFrameArrivedEventArgs args)
@@ -164,7 +167,7 @@ namespace FaceDetection.ViewModels
                     bmp?.Dispose();
 
                     // Changes to XAML ImageElement must happen on UI thread through Dispatcher
-                    var task = DispatcherHelper.ExecuteOnUIThreadAsync(async () => {
+                    var task = DispatcherHelper.ExecuteOnUIThreadAsync((Func<Task>)(async () => {
                         // Don't let two copies of this task run at the same time.
                         if (_isImageSourceUpdateRunning) return;
                         _isImageSourceUpdateRunning = true;
@@ -176,13 +179,13 @@ namespace FaceDetection.ViewModels
                             checkingBmp = Interlocked.Exchange(ref _imageBuffer, null);
                             if (checkingBmp == null) break;
                             latestBmp = checkingBmp;
-                            var imageSource = (SoftwareBitmapSource)ImageControl.Source;
+                            var imageSource = (SoftwareBitmapSource)this._imageControl.Source;
                             await imageSource?.SetBitmapAsync(latestBmp);
                         }
                         if (latestBmp != null) _frameModel.SoftwareBitmap = latestBmp;
 
                         _isImageSourceUpdateRunning = false;
-                    });
+                    }));
                 }
             }
         }
@@ -243,7 +246,7 @@ namespace FaceDetection.ViewModels
                 if (_faceDetectionControl.IsFaceDetectionEnabled && _cameraControl.IsPreviewing)
                 {
                     var fpsStr = $"Face Detection FPS: {_faceDetectionControl.FPS.ToString("n2")}";
-                    TextBlock faceDetectionFPS = UIUtils.CreateTextBlock(fpsStr, _canvasObjectColor, 20, 20);
+                    TextBlock faceDetectionFPS = UIUtils.CreateTextBlock(fpsStr, _canvasObjectColor, 20, -20);
                     _facesCanvas.Children.Add(faceDetectionFPS);
                 }
 
@@ -258,6 +261,28 @@ namespace FaceDetection.ViewModels
                     _facesCanvas.Children.Add(scaledSize);
                 }
             }
+            SetFacesCanvasRotation(originalSize);
+        }
+
+        private void SetFacesCanvasRotation(System.Drawing.Size streamSize)
+        {
+            var windowSize = GetWindowSize();
+            var previewArea = GetDisplayRectInControl(streamSize, windowSize);
+
+            _facesCanvas.Width = previewArea.Width;
+            _facesCanvas.Height = previewArea.Height;
+
+            Canvas.SetLeft(_facesCanvas, previewArea.X);
+            Canvas.SetTop(_facesCanvas, previewArea.Y);
+
+            // Also mirror the canvas if the preview is being mirrored
+            if (_cameraControl.IsPreviewing)
+            {
+                _facesCanvas.FlowDirection = _cameraControl.MirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+            } else
+            {
+                _facesCanvas.FlowDirection = FlowDirection.LeftToRight;
+            }
         }
 
         private Rectangle ConvertPreviewToUiRectangle(FaceBoundingBox faceBox, System.Drawing.Size streamSize)
@@ -269,8 +294,7 @@ namespace FaceDetection.ViewModels
             if (streamWidth == 0 || streamHeight == 0) return result;
 
             // Get the rectangle that is occupied by the actual video feed
-            var currWindowFrame = Window.Current.Bounds;
-            var windowSize = new Size(currWindowFrame.Width, currWindowFrame.Height);
+            var windowSize = GetWindowSize();
             var previewInUI = GetDisplayRectInControl(streamSize, windowSize);
             var scaleWidth = previewInUI.Width / streamWidth;
             var scaleHeight = previewInUI.Height / streamHeight;
@@ -280,8 +304,8 @@ namespace FaceDetection.ViewModels
             result.Height = faceBox.Height * scaleHeight;
 
             // Scale the X and Y coordinates from preview stream coordinates to window coordinates
-            var x = previewInUI.X + faceBox.X0 * scaleWidth;
-            var y = previewInUI.Y + faceBox.Y0 * scaleHeight;
+            var x = faceBox.X0 * scaleWidth;
+            var y = faceBox.Y0 * scaleHeight;
             Canvas.SetLeft(result, x);
             Canvas.SetTop(result, y);
 
@@ -319,6 +343,13 @@ namespace FaceDetection.ViewModels
                 result.Height = scaledHeight;
             }
             return result;
+        }
+
+        private Size GetWindowSize()
+        {
+            var currWindowFrame = Window.Current.Bounds;
+            var windowSize = new Size(currWindowFrame.Width, currWindowFrame.Height);
+            return windowSize;
         }
 
         private async Task ClearFacesCanvas() => await DispatcherHelper.ExecuteOnUIThreadAsync(() => _facesCanvas.Children.Clear());
