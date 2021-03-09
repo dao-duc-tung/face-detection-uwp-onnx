@@ -71,7 +71,7 @@ namespace FaceDetection.ViewModels
             var modelLocalPath = config.ModelLocalPath;
             var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
             var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
-            await _faceDetectionControl.LoadModelAsync(file);
+            await _faceDetectionControl.LoadModelAsync<UltraFaceDetector2>(file);
         }
 
         private void InitDistanceEstimator()

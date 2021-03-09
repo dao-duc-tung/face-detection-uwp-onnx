@@ -1,6 +1,7 @@
 ﻿using Emgu.CV;
 using FaceDetection.FaceDetector;
 using FaceDetection.Utils;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
@@ -29,10 +30,10 @@ namespace FaceDetection.ViewModels
             }
         }
 
-        public async Task LoadModelAsync(StorageFile file)
+        public async Task LoadModelAsync<T>(StorageFile file) where T : IFaceDetector
         {
             var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
-            _faceDetector = new UltraFaceDetector(config);
+            _faceDetector = Activator.CreateInstance(typeof(T), new object[] { config }) as IFaceDetector;
             await _faceDetector.LoadModel(file);
         }
 
