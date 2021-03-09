@@ -13,9 +13,9 @@ namespace FaceDetection.ViewModels
     {
         private IFaceDetector _faceDetector;
         private bool _isDetecting;
-        public bool IsFaceDetectionEnabled { get; set; } = false;
-
         private Stopwatch _fpsStopwatch = new Stopwatch();
+
+        public bool IsFaceDetectionEnabled { get; set; }
         public float FPS { get; set; } = 0;
 
         public event FaceDetectedEventHandler FaceDetected

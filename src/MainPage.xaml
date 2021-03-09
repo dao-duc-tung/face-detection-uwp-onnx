@@ -6,10 +6,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:i="using:Microsoft.Xaml.Interactivity"
     xmlns:core="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:converters="using:FaceDetection.Converters"
     mc:Ignorable="d">
 
     <Page.Resources>
         <SolidColorBrush x:Key="TranslucentBlackBrush" Color="Black" Opacity="0.3"/>
+        <converters:BoolToVisibility x:Key="BoolToVisibility"/>
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -35,7 +37,8 @@
             </i:Interaction.Behaviors>
         </Image>
         <Canvas>
-            <Canvas Name="FacesCanvas">
+            <Canvas Name="FacesCanvas"
+                    Visibility="{Binding IsFaceDetectionEnabled, Converter={StaticResource BoolToVisibility}}">
                 <i:Interaction.Behaviors>
                     <core:EventTriggerBehavior EventName="Loaded">
                         <core:InvokeCommandAction Command="{x:Bind ViewModel.FacesCanvasLoaded}"

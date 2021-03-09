@@ -19,6 +19,7 @@ namespace FaceDetection
         public MainPage()
         {
             InitializeComponent();
+            DataContext = ViewModel;
             Application.Current.Suspending += Application_Suspending;
         }
 

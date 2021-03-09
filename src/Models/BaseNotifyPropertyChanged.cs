@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace FaceDetection.Utils
 {
-    public class BaseNotifyPropertyChanged
+    public class BaseNotifyPropertyChanged : INotifyPropertyChanged
     {
 		public event PropertyChangedEventHandler PropertyChanged;
 		protected virtual bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string propertyName = null)

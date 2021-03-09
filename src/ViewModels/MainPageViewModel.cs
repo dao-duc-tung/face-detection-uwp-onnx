@@ -36,6 +36,17 @@ namespace FaceDetection.ViewModels
         private SoftwareBitmap _imageBuffer;
         private bool _isImageSourceUpdateRunning = false;
 
+        private bool _isFaceDetectionEnabled = false;
+        public bool IsFaceDetectionEnabled
+        {
+            get => _faceDetectionControl.IsFaceDetectionEnabled;
+            set
+            {
+                _faceDetectionControl.IsFaceDetectionEnabled = value;
+                SetProperty(ref _isFaceDetectionEnabled, value);
+            }
+        }
+
         public ICommand ImageControlLoaded { get; set; }
         public ICommand FacesCanvasLoaded { get; set; }
         public ICommand LoadPhotoCmd { get; set; }
@@ -71,7 +82,7 @@ namespace FaceDetection.ViewModels
             var modelLocalPath = config.ModelLocalPath;
             var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
             var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
-            await _faceDetectionControl.LoadModelAsync<UltraFaceDetector2>(file);
+            await _faceDetectionControl.LoadModelAsync<UltraFaceDetector>(file);
         }
 
         private void InitDistanceEstimator()
@@ -117,7 +128,6 @@ namespace FaceDetection.ViewModels
                 _imageControl.FlowDirection = _cameraControl.MirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
             }
             else await TurnOffCameraPreview();
-            await ClearFacesCanvas();
         }
 
         private async Task TurnOnCameraPreview()
@@ -194,8 +204,8 @@ namespace FaceDetection.ViewModels
         #region Face Detection Control
         private async Task ToggleFaceDetection()
         {
-            _faceDetectionControl.IsFaceDetectionEnabled = !_faceDetectionControl.IsFaceDetectionEnabled;
-            if (_faceDetectionControl.IsFaceDetectionEnabled)
+            IsFaceDetectionEnabled = !IsFaceDetectionEnabled;
+            if (IsFaceDetectionEnabled)
             {
                 _faceDetectionControl.FaceDetected += _faceDetector_FaceDetected;
                 await RunFaceDetection();
@@ -203,7 +213,6 @@ namespace FaceDetection.ViewModels
             else
             {
                 _faceDetectionControl.FaceDetected -= _faceDetector_FaceDetected;
-                await ClearFacesCanvas();
             }
         }
 
@@ -243,7 +252,7 @@ namespace FaceDetection.ViewModels
                 TextBlock distance = UIUtils.CreateTextBlock(distStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB));
                 _facesCanvas.Children.Add(distance);
 
-                if (_faceDetectionControl.IsFaceDetectionEnabled && _cameraControl.IsPreviewing)
+                if (IsFaceDetectionEnabled && _cameraControl.IsPreviewing)
                 {
                     var fpsStr = $"Face Detection FPS: {_faceDetectionControl.FPS.ToString("n2")}";
                     TextBlock faceDetectionFPS = UIUtils.CreateTextBlock(fpsStr, _canvasObjectColor, 20, -20);
@@ -352,7 +361,6 @@ namespace FaceDetection.ViewModels
             return windowSize;
         }
 
-        private async Task ClearFacesCanvas() => await DispatcherHelper.ExecuteOnUIThreadAsync(() => _facesCanvas.Children.Clear());
         #endregion Face Detection Control
     }
 }
