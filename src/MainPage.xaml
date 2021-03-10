@@ -37,6 +37,11 @@
             </i:Interaction.Behaviors>
         </Image>
         <Canvas>
+            <TextBlock Text="{Binding FaceDetectionFPSString}"
+                       FontWeight="Bold"
+                       Margin="10, 10, 10, 10"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Left"/>
             <Canvas Name="FacesCanvas"
                     Visibility="{Binding IsFaceDetectionEnabled, Converter={StaticResource BoolToVisibility}}">
                 <i:Interaction.Behaviors>

@@ -36,6 +36,14 @@ namespace FaceDetection.ViewModels
         private SoftwareBitmap _imageBuffer;
         private bool _isImageSourceUpdateRunning = false;
 
+        private string _faceDetectionFPSStringFormat = "Face Detection FPS: {0}";
+        private string _faceDetectionFPSString = "";
+        public string FaceDetectionFPSString
+        {
+            get => _faceDetectionFPSString;
+            set => SetProperty(ref _faceDetectionFPSString, value);
+        }
+
         private bool _isFaceDetectionEnabled = false;
         public bool IsFaceDetectionEnabled
         {
@@ -74,6 +82,14 @@ namespace FaceDetection.ViewModels
         private void SubscribeEvents()
         {
             _frameModel.PropertyChanged += _frameModel_PropertyChanged;
+        }
+
+        private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
+            {
+                Task.Run(async () => await RunFaceDetection());
+            }
         }
 
         private async Task LoadModelAsync()
@@ -127,7 +143,11 @@ namespace FaceDetection.ViewModels
                 await TurnOnCameraPreview();
                 _imageControl.FlowDirection = _cameraControl.MirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
             }
-            else await TurnOffCameraPreview();
+            else
+            {
+                await TurnOffCameraPreview();
+                await DispatcherHelper.ExecuteOnUIThreadAsync(() => _facesCanvas.Children.Clear());
+            }
         }
 
         private async Task TurnOnCameraPreview()
@@ -216,17 +236,9 @@ namespace FaceDetection.ViewModels
             }
         }
 
-        private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async void _faceDetector_FaceDetected(object sender, FaceDetectedEventArgs eventArgs)
         {
-            if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
-            {
-                Task.Run(async () => await RunFaceDetection());
-            }
-        }
-
-        private async void _faceDetector_FaceDetected(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, System.Drawing.Size originalSize)
-        {
-            await DispatcherHelper.ExecuteOnUIThreadAsync(() => HighlightDetectedFaces(faceBoundingBoxes, originalSize));
+            await DispatcherHelper.ExecuteOnUIThreadAsync(() => HighlightDetectedFaces(eventArgs.BoundingBoxes, eventArgs.OriginalSize));
         }
 
         private async Task RunFaceDetection()
@@ -248,24 +260,25 @@ namespace FaceDetection.ViewModels
                 faceBB.Stroke = _canvasObjectColor;
                 _facesCanvas.Children.Add(faceBB);
 
-                var distStr = _distanceEstimator.ComputeDistance(faces[i]).ToString("n0") + " cm";
-                TextBlock distance = UIUtils.CreateTextBlock(distStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB));
-                _facesCanvas.Children.Add(distance);
+                if (_cameraControl.IsPreviewing)
+                    FaceDetectionFPSString = string.Format(_faceDetectionFPSStringFormat, StrUtils.RdFloat(_faceDetectionControl.FPS));
+                else
+                    FaceDetectionFPSString = "";
 
-                if (IsFaceDetectionEnabled && _cameraControl.IsPreviewing)
+                if (_cameraControl.IsPreviewing)
                 {
-                    var fpsStr = $"Face Detection FPS: {_faceDetectionControl.FPS.ToString("n2")}";
-                    TextBlock faceDetectionFPS = UIUtils.CreateTextBlock(fpsStr, _canvasObjectColor, 20, -20);
-                    _facesCanvas.Children.Add(faceDetectionFPS);
+                    var distStr = StrUtils.RdFloat(_distanceEstimator.ComputeDistance(faces[i]), 0) + " cm";
+                    TextBlock distance = UIUtils.CreateTextBlock(distStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB));
+                    _facesCanvas.Children.Add(distance);
                 }
 
                 if (IsBoxSizeDisplayed)
                 {
-                    var origSizeStr = $"Orig Size: {faces[i].Width.ToString("n2")} x {faces[i].Height.ToString("n2")}";
+                    var origSizeStr = $"Orig Size: {StrUtils.RdFloat(faces[i].Width)} x {StrUtils.RdFloat(faces[i].Height)}";
                     TextBlock origSize = UIUtils.CreateTextBlock(origSizeStr, _canvasObjectColor, Canvas.GetLeft(faceBB), Canvas.GetTop(faceBB) - 40);
                     _facesCanvas.Children.Add(origSize);
 
-                    var scaledSizeStr= $"Scaled Size: {faceBB.Width.ToString("n2")} x {faceBB.Height.ToString("n2")}";
+                    var scaledSizeStr= $"Scaled Size: {StrUtils.RdDouble(faceBB.Width)} x {StrUtils.RdDouble(faceBB.Height)}";
                     TextBlock scaledSize = UIUtils.CreateTextBlock(scaledSizeStr, _canvasObjectColor, Canvas.GetLeft(faceBB), Canvas.GetTop(faceBB) - 20);
                     _facesCanvas.Children.Add(scaledSize);
                 }
