@@ -80,17 +80,16 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
 
 ### Installation
 
-1. Clone the repository and open the project in Visual Studio
+1. Clone the repository and open file *src/FaceDetection.sln* in Visual Studio
 2. Install required NuGet Packages
-    - In **Solution Explorer** window, right-click on solution, select Restore NuGet Packages
-   ```
-3. Provide access to device's camera
-    - In project **FaceDetection**, open file **Package.appxmanifest**
-    - In tab **Capabilities**, select **Microphone** and **Webcam**
+  - In **Solution Explorer** window, right-click on solution, select **Restore NuGet Packages**
+3. Change project configuration
+  - In **Solution Explorer** window, right-click on solution, select **Configuration Manager**
+  - On **Active solution platform**, select **x86**
 4. (Optional) Run test
-    - In **Solution Explorer** window, right click on **UnitTest** project, select **Run Tests**
+  - In **Solution Explorer** window, right click on **UnitTest** project, select **Run Tests**
 5. Run main application
-    - Build and run **FaceDetection** project
+  - Build and run **FaceDetection** project
 
 <!-- USAGE EXAMPLES -->
 ## Usage
@@ -142,7 +141,7 @@ When the user enables the Face Detection function, the Face Detector will get th
 
 Face Detector's outputs are the input of the Distance Estimator as well. The distance from each face to the camera will then be display on the *Canvas layer*.
 
-By making the module's input/output like this, each module will know clearly about their responsibility and the coupling can be reduced in the class design as well.
+By making the module's input/output like this, each module will know clearly about their responsibility and the coupling can be reduced in the class design phase.
 
 ### Add new face detector
 
@@ -180,7 +179,7 @@ public interface IConfig
 
 The new face detector class's constructor can receive the corresponding configuration class for later usage.
 
-All the configuration class which inherits the **IConfig** interface should be registered in **AppConfig** instance. The **AppConfig** class is defined as a **Singleton** class so it can store all the configurations of any face detector, main application, or of anything else.
+All the configuration class which inherits the **IConfig** interface should be registered in **AppConfig** instance. The **AppConfig** class is defined as a **Singleton** class so any class can retrieve the configurations of face detectors, main application, etc from anywhere without loading the configurations again.
 
 ## Convert Tensorflow model to ONNX
 
@@ -207,13 +206,13 @@ Follow [this link](https://github.com/opencv/opencv/wiki/TensorFlow-Object-Detec
 
 ## ONNX Inference
 
+In this application, I use **Windows ML** and **ONNX Runtime** for inference on [**Ultra-lightweight face detection model**](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB). The inference implementation using **Windows ML** is in *UltraFaceDetector.cs* and the implementation of **ONNX Runtime** is in *UltraFaceDetector2.cs*.
+
 **Windows ML** is a high-performance API for deploying hardware-accelerate ML inferences on Windows devices.
 
 ![Windows ML][windows-ml]
 
-For the *NuGet* package, **Windows ML** is built into *Microsoft.ai.machinelearning.dll*. It does not contain an embedded **ONNX runtime**, instead the **ONNX runtime** is built into the file: *onnxruntime.dll*.
-
-In this application, I use both **Windows ML** and **ONNX Runtime** for inference. The inference implementation using **Windows ML** is in *UltraFaceDetector.cs* and the implementation of **ONNX Runtime** is in *UltraFaceDetector2.cs*.
+For the NuGet package, **Windows ML** is built into *Microsoft.ai.machinelearning.dll*. It does not contain an embedded **ONNX runtime**, instead the **ONNX runtime** is built into the file: *onnxruntime.dll*. Follow [this link](https://docs.microsoft.com/en-us/windows/ai/windows-ml/) for more details.
 
 
 <!-- CONTRIBUTING -->
