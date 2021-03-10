@@ -15,6 +15,7 @@ namespace FaceDetection.DistanceEstimator
 
         public float ComputeDistance(CornerBoundingBox bb)
         {
+            if (bb == null || !bb.IsValid()) return 0;
             return _focalLength * _config.FixedFaceHeightCM / bb.Height;
         }
     }
