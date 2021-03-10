@@ -1,5 +1,6 @@
 ﻿using Emgu.CV;
 using FaceDetection.Utils;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading.Tasks;
@@ -7,7 +8,12 @@ using Windows.Storage;
 
 namespace FaceDetection.FaceDetector
 {
-    public delegate void FaceDetectedEventHandler(object sender, IReadOnlyList<FaceBoundingBox> faceBoundingBoxes, Size originalSize);
+    public class FaceDetectedEventArgs : EventArgs
+    {
+        public IReadOnlyList<FaceBoundingBox> BoundingBoxes;
+        public Size OriginalSize;
+    }
+    public delegate void FaceDetectedEventHandler(object sender, FaceDetectedEventArgs eventArgs);
 
     public interface IFaceDetector
     {

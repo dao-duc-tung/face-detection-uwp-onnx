@@ -26,7 +26,8 @@ namespace FaceDetection.FaceDetector
 
         protected void RaiseFaceDetectedEvent(IReadOnlyList<FaceBoundingBox> faces, Size originalSize)
         {
-            FaceDetected?.Invoke(this, faces, originalSize);
+            var eventArgs = new FaceDetectedEventArgs() { BoundingBoxes = faces, OriginalSize = originalSize };
+            FaceDetected?.Invoke(this, eventArgs);
         }
 
         protected struct InputImageSettings
