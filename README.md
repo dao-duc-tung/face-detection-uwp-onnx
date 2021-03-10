@@ -224,11 +224,13 @@ The pinhole camera generates a uniform relationship between the object and the i
 
 <img src="https://latex.codecogs.com/gif.latex?\frac{f}{d}=\frac{r}{R}" title="(1)" /> <br/>
 
-<img src="https://latex.codecogs.com/gif.latex?f=d\times\frac{r}{R}&space;pixels" title="(2)" /> <br/>
+<img src="https://latex.codecogs.com/gif.latex?f=d\times\frac{r}{R}" title="(2)" /> <br/>
 
-<img src="https://latex.codecogs.com/gif.latex?d=f\times\frac{R}{r}&space;cm" title="(3)" /> <br/>
+<img src="https://latex.codecogs.com/gif.latex?d=f\times\frac{R}{r}" title="(3)" /> <br/>
 
-Firstly, I adjust my face in front of the camera with a fixed distance of *d*. Then I use the application to detect my face at that *d* distance and record the height of the detected bounding box which is *r*. I also need to measure my face height in CM which is *R*. Finally, I calculate the focal length *f* by using the second equation above.
+where *f* (pixels) is Focal Lenght, *d* (cm) is the distance between the camera and the face, *R* (cm) is the face Height, *r* (pixels) is the face height on the screen.
+
+Firstly, I adjust my face in front of the camera with a fixed distance of *d*. Then I use the application to detect my face at that *d* distance and record the height of the detected bounding box which is *r*. I also need to measure my face height which is *R*. Finally, I calculate the focal length *f* by using the second equation above.
 
 In the application, I use the third equation to estimate the distance between the face and the camera. In the third equation, *f* and *R* are fixed. *r* is given by the Face Detector which is the height of the bounding box.
 
