@@ -2686,7 +2686,7 @@
 									"top": 168,
 									"width": 54.18994140625,
 									"height": 26,
-									"text": "Load image",
+									"text": "Image Loader",
 									"wordWrap": true
 								},
 								{
@@ -2782,8 +2782,8 @@
 									"left": 201,
 									"top": 280,
 									"width": 91.76171875,
-									"height": 26,
-									"text": "Convert to SoftwareBitmap",
+									"height": 52,
+									"text": "Convert Image/Frame to SoftwareBitmap",
 									"wordWrap": true
 								},
 								{
@@ -2803,7 +2803,7 @@
 							"left": 191,
 							"top": 248,
 							"width": 111.76171875,
-							"height": 82,
+							"height": 95,
 							"nameLabel": {
 								"$ref": "AAAAAAF4BdmsY1qGv0Q="
 							},
@@ -2831,8 +2831,8 @@
 									"left": 314,
 									"top": 168,
 									"width": 54.18994140625,
-									"height": 26,
-									"text": "Stream camera",
+									"height": 13,
+									"text": "Camera",
 									"wordWrap": true
 								},
 								{
@@ -2881,7 +2881,7 @@
 									"top": 360,
 									"width": 54.18994140625,
 									"height": 26,
-									"text": "Detect face",
+									"text": "Face Detector",
 									"wordWrap": true
 								},
 								{
@@ -2929,8 +2929,8 @@
 									"left": 346,
 									"top": 475,
 									"width": 87.013671875,
-									"height": 39,
-									"text": "Convert to FaceDetector's input",
+									"height": 52,
+									"text": "Convert to Face Detector's input",
 									"wordWrap": true
 								},
 								{
@@ -3119,7 +3119,7 @@
 									"visible": false,
 									"font": "Arial;13;0",
 									"left": 262,
-									"top": 345,
+									"top": 352,
 									"height": 13,
 									"alpha": 1.5707963267948966,
 									"distance": 15,
@@ -3137,7 +3137,7 @@
 								"$ref": "AAAAAAF4BdmsY1qFgl4="
 							},
 							"lineStyle": 2,
-							"points": "248:329;248:376",
+							"points": "248:342;248:376",
 							"nameLabel": {
 								"$ref": "AAAAAAF4BdsEsVrcWrE="
 							}
@@ -3569,7 +3569,7 @@
 					"_parent": {
 						"$ref": "AAAAAAF4BdaFYFn0V4M="
 					},
-					"name": "Load image",
+					"name": "Image Loader",
 					"ownedElements": [
 						{
 							"_type": "DFDDataFlow",
@@ -3616,7 +3616,7 @@
 					"_parent": {
 						"$ref": "AAAAAAF4BdaFYFn0V4M="
 					},
-					"name": "Convert to SoftwareBitmap",
+					"name": "Convert Image/Frame to SoftwareBitmap",
 					"ownedElements": [
 						{
 							"_type": "DFDDataFlow",
@@ -3639,7 +3639,7 @@
 					"_parent": {
 						"$ref": "AAAAAAF4BdaFYFn0V4M="
 					},
-					"name": "Stream camera",
+					"name": "Camera",
 					"ownedElements": [
 						{
 							"_type": "DFDDataFlow",
@@ -3662,7 +3662,7 @@
 					"_parent": {
 						"$ref": "AAAAAAF4BdaFYFn0V4M="
 					},
-					"name": "Detect face",
+					"name": "Face Detector",
 					"ownedElements": [
 						{
 							"_type": "DFDDataFlow",
@@ -3685,7 +3685,7 @@
 					"_parent": {
 						"$ref": "AAAAAAF4BdaFYFn0V4M="
 					},
-					"name": "Convert to FaceDetector's input",
+					"name": "Convert to Face Detector's input",
 					"ownedElements": [
 						{
 							"_type": "DFDDataFlow",
