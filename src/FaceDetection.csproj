@@ -41,7 +41,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
@@ -117,7 +117,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
-    <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <UseDotNetNativeToolchain>false</UseDotNetNativeToolchain>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
@@ -127,10 +127,13 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\BoolToVisibility.cs" />
     <Compile Include="DistanceEstimator\FocalLengthDistanceEstimator.cs" />
     <Compile Include="DistanceEstimator\FocalLengthDistanceEstimatorConfig.cs" />
+    <Compile Include="FaceDetector\BaseUltraFaceDetector.cs" />
     <Compile Include="FaceDetector\IFaceDetector.cs" />
     <Compile Include="FaceDetector\UltraFaceDetector.cs" />
+    <Compile Include="FaceDetector\UltraFaceDetector2.cs" />
     <Compile Include="FaceDetector\UltraFaceDetectorConfig.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -138,14 +141,17 @@
     <Compile Include="Models\FrameModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\AppConfig.cs" />
-    <Compile Include="Utils\BaseNotifyPropertyChanged.cs" />
-    <Compile Include="Utils\ClassFactory.cs" />
-    <Compile Include="Utils\Constants.cs" />
-    <Compile Include="Utils\CornerBoundingBox.cs" />
-    <Compile Include="Utils\DelegateCommand.cs" />
-    <Compile Include="Utils\FaceBoundingBox.cs" />
+    <Compile Include="Models\BaseNotifyPropertyChanged.cs" />
+    <Compile Include="Misc\ClassFactory.cs" />
+    <Compile Include="Misc\Constants.cs" />
+    <Compile Include="DataModel\CornerBoundingBox.cs" />
+    <Compile Include="Utils\StrUtils.cs" />
+    <Compile Include="ViewModels\DelegateCommand.cs" />
+    <Compile Include="DataModel\FaceBoundingBox.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\IConfig.cs" />
+    <Compile Include="Utils\MainConfig.cs" />
+    <Compile Include="Utils\UIUtils.cs" />
     <Compile Include="ViewModels\CameraControl.cs" />
     <Compile Include="Utils\ImageUtils.cs" />
     <Compile Include="ViewModels\FaceDetectionControl.cs" />
@@ -157,6 +163,9 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\MainConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\UltraFaceDetectorConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -192,6 +201,9 @@
     <PackageReference Include="Emgu.CV.runtime.windows">
       <Version>4.5.1.4349</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime">
+      <Version>1.6.0</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.10</Version>
     </PackageReference>
@@ -201,12 +213,16 @@
     <PackageReference Include="Microsoft.Xaml.Behaviors.Uwp.Managed">
       <Version>2.0.1</Version>
     </PackageReference>
+    <PackageReference Include="Sentry">
+      <Version>3.0.8</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\version-RFB-320.onnx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

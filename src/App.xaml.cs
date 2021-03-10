@@ -2,6 +2,7 @@
 using FaceDetection.FaceDetector;
 using FaceDetection.Utils;
 using FaceDetection.ViewModels;
+using Sentry;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -27,20 +28,21 @@ namespace FaceDetection
         /// </summary>
         public App()
         {
-            Task.Run(LoadAppConfigAsync).Wait();
-            InitializeComponent();
-            Suspending += OnSuspending;
+            // Init Sentry Log (Release build only)
+            using (SentrySdk.Init("https://5c07bf6d3d024a97b3a81f0d5ce3cb10@o546697.ingest.sentry.io/5668551"))
+            {
+                Task.Run(LoadAppConfigAsync).Wait();
+                InitializeComponent();
+                Suspending += OnSuspending;
+                UnhandledException += Application_UnhandledException;
+            }
         }
 
         private async Task LoadAppConfigAsync()
         {
-            var uri1 = FileUtils.GetUriByLocalFilePath(ConfigLocalPath.UltraFaceDetector);
-            var file1 = await StorageFile.GetFileFromApplicationUriAsync(uri1);
-            await AppConfig.Instance.RegisterConfig<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector, file1);
-
-            var uri2 = FileUtils.GetUriByLocalFilePath(ConfigLocalPath.FocalLengthDistanceEstimator);
-            var file2 = await StorageFile.GetFileFromApplicationUriAsync(uri2);
-            await AppConfig.Instance.RegisterConfig<FocalLengthDistanceEstimatorConfig>(ConfigName.FocalLengthDistanceEstimator, file2);
+            await FileUtils.ReadConfigFile<MainConfig>(ConfigName.Main, ConfigLocalPath.Main);
+            await FileUtils.ReadConfigFile<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector, ConfigLocalPath.UltraFaceDetector);
+            await FileUtils.ReadConfigFile<FocalLengthDistanceEstimatorConfig>(ConfigName.FocalLengthDistanceEstimator, ConfigLocalPath.FocalLengthDistanceEstimator);
         }
 
         /// <summary>
@@ -106,6 +108,14 @@ namespace FaceDetection
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+
+        private void Application_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+        {
+            SentrySdk.CaptureException(e.Exception);
+
+            // Avoid the application from crashing
+            e.Handled = true;
         }
     }
 }

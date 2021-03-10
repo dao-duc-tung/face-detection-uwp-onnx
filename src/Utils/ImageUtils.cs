@@ -17,12 +17,17 @@ namespace FaceDetection.Utils
             void GetBuffer(out byte* buffer, out uint capacity);
         }
 
-        public unsafe static Mat ConvertSoftwareBitmapToMat(SoftwareBitmap bmp)
+        public unsafe static Mat ConvertSoftwareBitmapToMat(SoftwareBitmap bmp, int nChannel = 4)
         {
-            int nChannel = 4;
             Mat mat = null;
             try
             {
+                if (bmp.BitmapPixelFormat != BitmapPixelFormat.Bgra8 ||
+                    bmp.BitmapAlphaMode != BitmapAlphaMode.Ignore)
+                {
+                    bmp = SoftwareBitmap.Convert(bmp, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
+                }
+
                 using (BitmapBuffer buffer = bmp.LockBuffer(BitmapBufferAccessMode.Read))
                 {
                     using (var reference = buffer.CreateReference())

@@ -14,7 +14,7 @@ namespace FaceDetection.Utils
         {
             var config = Activator.CreateInstance(typeof(T), true) as IConfig;
             await config.ReadAsync(file);
-            _configs.Add(configName, config);
+            _configs[configName] = config;
         }
 
         public IConfig GetConfig(string configName)

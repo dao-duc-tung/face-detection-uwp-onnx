@@ -6,10 +6,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:i="using:Microsoft.Xaml.Interactivity"
     xmlns:core="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:converters="using:FaceDetection.Converters"
     mc:Ignorable="d">
 
     <Page.Resources>
         <SolidColorBrush x:Key="TranslucentBlackBrush" Color="Black" Opacity="0.3"/>
+        <converters:BoolToVisibility x:Key="BoolToVisibility"/>
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -26,14 +28,6 @@
             </Style>
         </Grid.Resources>
 
-        <CaptureElement Name="PreviewControl" Stretch="Uniform">
-            <i:Interaction.Behaviors>
-                <core:EventTriggerBehavior EventName="Loaded">
-                    <core:InvokeCommandAction Command="{x:Bind ViewModel.PreviewControlLoaded}"
-                                              CommandParameter="{Binding ElementName=PreviewControl}"/>
-                </core:EventTriggerBehavior>
-            </i:Interaction.Behaviors>
-        </CaptureElement>
         <Image Name="ImageControl" Stretch="Uniform">
             <i:Interaction.Behaviors>
                 <core:EventTriggerBehavior EventName="Loaded">
@@ -43,7 +37,13 @@
             </i:Interaction.Behaviors>
         </Image>
         <Canvas>
-            <Canvas Name="FacesCanvas">
+            <TextBlock Text="{Binding FaceDetectionFPSString}"
+                       FontWeight="Bold"
+                       Margin="10, 10, 10, 10"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Left"/>
+            <Canvas Name="FacesCanvas"
+                    Visibility="{Binding IsFaceDetectionEnabled, Converter={StaticResource BoolToVisibility}}">
                 <i:Interaction.Behaviors>
                     <core:EventTriggerBehavior EventName="Loaded">
                         <core:InvokeCommandAction Command="{x:Bind ViewModel.FacesCanvasLoaded}"

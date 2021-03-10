@@ -2,7 +2,7 @@
 using FaceDetection.FaceDetector;
 using FaceDetection.Utils;
 using System;
-using System.Threading;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -12,8 +12,11 @@ namespace FaceDetection.ViewModels
     public class FaceDetectionControl
     {
         private IFaceDetector _faceDetector;
-        private int _detectingFlag;
-        public bool IsFaceDetectionEnabled { get; set; } = false;
+        private bool _isDetecting;
+        private Stopwatch _fpsStopwatch = new Stopwatch();
+
+        public bool IsFaceDetectionEnabled { get; set; }
+        public float FPS { get; private set; } = 0;
 
         public event FaceDetectedEventHandler FaceDetected
         {
@@ -27,14 +30,14 @@ namespace FaceDetection.ViewModels
             }
         }
 
-        public async Task LoadModelAsync(StorageFile file)
+        public async Task LoadModelAsync<T>(StorageFile file) where T : IFaceDetector
         {
             var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
-            _faceDetector = new UltraFaceDetector(config);
+            _faceDetector = Activator.CreateInstance(typeof(T), new object[] { config }) as IFaceDetector;
             await _faceDetector.LoadModel(file);
         }
 
-        public async void RunFaceDetection(SoftwareBitmap bmp)
+        public async Task RunFaceDetection(SoftwareBitmap bmp)
         {
             if (!IsFaceDetectionEnabled || _faceDetector == null) return;
             else if (_faceDetector != null && !_faceDetector.IsModelLoaded()) return;
@@ -42,12 +45,16 @@ namespace FaceDetection.ViewModels
             Mat img = ImageUtils.ConvertSoftwareBitmapToMat(bmp);
             if (img == null) return;
 
-            if (Interlocked.CompareExchange(ref _detectingFlag, 1, 0) == 0)
-            {
-                await _faceDetector.Detect(img);
-                img.Dispose();
-            }
-            Interlocked.Exchange(ref _detectingFlag, 0);
+            if (_isDetecting) return;
+            _isDetecting = true;
+
+            _fpsStopwatch.Restart();
+            await _faceDetector.Detect(img);
+            _fpsStopwatch.Stop();
+            FPS = 1.0f / (float)_fpsStopwatch.Elapsed.TotalSeconds;
+            img.Dispose();
+            
+            _isDetecting = false;
         }
 
         public static FaceBoundingBox ScaleBoundingBox(FaceBoundingBox origBB, System.Drawing.Size originalSize)
