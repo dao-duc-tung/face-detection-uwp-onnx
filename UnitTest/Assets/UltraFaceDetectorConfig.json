@@ -1,0 +1,6 @@
+﻿{
+	"ModelLocalPath": "Assets/version-RFB-320.onnx",
+	"ConfidenceThreshold": "0.7",
+	"IoUThreshold": "0.0",
+	"LimitMaxFaces": "200"
+}
