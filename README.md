@@ -99,8 +99,8 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
 
 ![Detect on photo][detect-on-photo]
 
-- Click **Image Button** (first button on the right), select any image
-- Click **Detect Button** (last button on the right) to enable/disable face detection function
+- Click **Image Button** (top button on the right), select any image
+- Click **Detect Button** (bottom button on the right) to enable/disable face detection function
 
 ### Detect face on live camera
 
@@ -209,9 +209,9 @@ Follow [this link](https://github.com/opencv/opencv/wiki/TensorFlow-Object-Detec
 
 In this application, I use **Windows ML** and **ONNX Runtime** for inference on [**Ultra-lightweight face detection model**](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB). The inference implementation using **Windows ML** is in *UltraFaceDetector.cs* and the implementation of **ONNX Runtime** is in *UltraFaceDetector2.cs*.
 
-**Windows ML** is a high-performance API for deploying hardware-accelerate ML inferences on Windows devices.
-
 ![Windows ML][windows-ml]
+
+**Windows ML** is a high-performance API for deploying hardware-accelerate ML inferences on Windows devices. **ONNX Runtime** is a cross-platform inference and training machine-learning accelerator compatible with deep learning frameworks, PyTorch and TensorFlow/Keras, as well as classical machine learning libraries such as scikit-learn, and more.
 
 For the NuGet package, **Windows ML** is built into *Microsoft.ai.machinelearning.dll*. It does not contain an embedded **ONNX runtime**, instead the **ONNX runtime** is built into the file: *onnxruntime.dll*. Follow [this link](https://docs.microsoft.com/en-us/windows/ai/windows-ml/) for more details.
 
