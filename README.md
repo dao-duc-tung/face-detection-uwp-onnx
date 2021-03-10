@@ -1,16 +1,16 @@
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/https://github.com/dao-duc-tung/face-detection-uwp-onnx">
+  <a href="https://github.com/dao-duc-tung/face-detection-uwp-onnx">
     <img src="media/banner.png" alt="Logo" width="300" height="100">
   </a>
 
   <h3 align="center">Face Detection on UWP using ONNX </h3>
 
   <p align="center">
-    <a href="https://github.com/https://github.com/dao-duc-tung/face-detection-uwp-onnx/issues">Report Bug</a>
+    <a href="https://github.com/dao-duc-tung/face-detection-uwp-onnx/issues">Report Bug</a>
     ·
-    <a href="https://github.com/https://github.com/dao-duc-tung/face-detection-uwp-onnx/issues">Request Feature</a>
+    <a href="https://github.com/dao-duc-tung/face-detection-uwp-onnx/issues">Request Feature</a>
   </p>
 </p>
 
@@ -37,6 +37,7 @@
     <li><a href="#convert-tensorflow-model-to-onnx">Convert Tensorflow model to ONNX</a></li>
     <li><a href="#tensorflow-and-opencv-compatibility-in-object-detection">Tensorflow and OpenCV compatibility in object detection</a></li>
     <li><a href="#onnx-inference">ONNX Inference</a></li>
+    <li><a href="#distance-estimation">Distance Estimation</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -215,6 +216,27 @@ In this application, I use **Windows ML** and **ONNX Runtime** for inference on 
 For the NuGet package, **Windows ML** is built into *Microsoft.ai.machinelearning.dll*. It does not contain an embedded **ONNX runtime**, instead the **ONNX runtime** is built into the file: *onnxruntime.dll*. Follow [this link](https://docs.microsoft.com/en-us/windows/ai/windows-ml/) for more details.
 
 
+## Distance Estimation
+
+![Pinhole camera][pinhole-camera]
+
+The pinhole camera generates a uniform relationship between the object and the image. Using this relationship, we form 3 equations as below:
+
+<img src="https://latex.codecogs.com/gif.latex?\frac{f}{d}=\frac{r}{R}" title="(1)" /> <br/>
+
+<img src="https://latex.codecogs.com/gif.latex?f=d\times\frac{r}{R}&space;pixels" title="(2)" /> <br/>
+
+<img src="https://latex.codecogs.com/gif.latex?d=f\times\frac{R}{r}&space;cm" title="(3)" /> <br/>
+
+Firstly, I adjust my face in front of the camera with a fixed distance of *d*. Then I use the application to detect my face at that *d* distance and record the height of the detected bounding box which is *r*. I also need to measure my face height in CM which is *R*. Finally, I calculate the focal length *f* by using the second equation above.
+
+In the application, I use the third equation to estimate the distance between the face and the camera. In the third equation, *f* and *R* are fixed. *r* is given by the Face Detector which is the height of the bounding box.
+
+This approach has its limitations. When people look down or look up, their face height changes. This will affect the estimated distance. We also need to compute the focal length of camera on the new device.
+
+Instead, we could implement facial landmark detection to measure the distance between eyes. Then we can use some linear relationship between the eyes distance and the face height/width to estimate the distance between the face and the camera.
+
+
 <!-- CONTRIBUTING -->
 ## Contributing
 
@@ -250,6 +272,7 @@ Project Link: [https://github.com/dao-duc-tung/face-detection-uwp-onnx](https://
 - [Model Inference using OnnxRuntime](https://www.onnxruntime.ai/docs/reference/api/csharp-api.html)
 - [Convert Tensorflow model to ONNX](https://github.com/onnx/Tensorflow-onnx)
 - [Ultra-lightweight face detection model](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)
+- [Estimate distance using camera focal length](http://emaraic.com/blog/distance-measurement)
 - [Sentry service](https://github.com/getsentry/sentry)
 
 
@@ -261,3 +284,4 @@ Project Link: [https://github.com/dao-duc-tung/face-detection-uwp-onnx](https://
 [use-case-diagram]: media/use-case-diagram.png
 [data-flow]: media/data-flow.png
 [windows-ml]: media/winml-nuget.svg
+[pinhole-camera]: media/pinhole-camera.png
