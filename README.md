@@ -220,7 +220,7 @@ For the NuGet package, **Windows ML** is built into *Microsoft.ai.machinelearnin
 
 ![Pinhole camera][pinhole-camera]
 
-The pinhole camera generates a uniform relationship between the object and the image. Using this relationship, we form 3 equations as below:
+The pinhole camera generates a uniform relationship between the object and the image. Using this relationship, we form 3 equations as below (refresh Github if you cannot see the equations):
 
 <img src="https://latex.codecogs.com/gif.latex?\frac{f}{d}=\frac{r}{R}" title="(1)" /> <br/>
 
@@ -228,7 +228,7 @@ The pinhole camera generates a uniform relationship between the object and the i
 
 <img src="https://latex.codecogs.com/gif.latex?d=f\times\frac{R}{r}" title="(3)" /> <br/>
 
-where *f* (pixels) is Focal Lenght, *d* (cm) is the distance between the camera and the face, *R* (cm) is the face Height, *r* (pixels) is the face height on the screen.
+where *f* (pixels) is Focal Length, *d* (cm) is the distance between the camera and the face, *R* (cm) is the face Height, *r* (pixels) is the face height on the screen.
 
 Firstly, I adjust my face in front of the camera with a fixed distance of *d*. Then I use the application to detect my face at that *d* distance and record the height of the detected bounding box which is *r*. I also need to measure my face height which is *R*. Finally, I calculate the focal length *f* by using the second equation above.
 
@@ -236,7 +236,7 @@ In the application, I use the third equation to estimate the distance between th
 
 This approach has its limitations. When people look down or look up, their face height changes. This will affect the estimated distance. We also need to compute the focal length of camera on the new device.
 
-Instead, we could implement facial landmark detection to measure the distance between eyes. Then we can use some linear relationship between the eyes distance and the face height/width to estimate the distance between the face and the camera.
+Future works could implement facial landmark detection to measure the distance between eyes. Then we can use some linear relationship between the eyes distance and the face height/width to estimate the distance between the face and the camera.
 
 
 <!-- CONTRIBUTING -->
