@@ -38,6 +38,7 @@ namespace FaceDetection.FaceDetector
 
         public override async Task LoadModel(StorageFile file)
         {
+            if (file == null) return;
             try
             {
                 var learningModel = await LearningModel.LoadFromStorageFileAsync(file);
@@ -52,6 +53,7 @@ namespace FaceDetection.FaceDetector
 
         public override async Task Detect(Mat originalImage)
         {
+            if (originalImage == null) return;
             var input = Preprocess(originalImage);
 
             var output = new UltraFaceDetectorOutput();

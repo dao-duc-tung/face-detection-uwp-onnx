@@ -5,6 +5,7 @@ using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -41,15 +42,23 @@ namespace FaceDetection.FaceDetector
 
         public override async Task LoadModel(StorageFile file)
         {
-            var localFolder = ApplicationData.Current.LocalFolder;
-            await file.CopyAsync(localFolder, _modelFileName, NameCollisionOption.ReplaceExisting);
-            var modelPath = Path.Combine(localFolder.Path, _modelFileName);
-            _session = new InferenceSession(modelPath);
-            _isLoaded = true;
+            if (file == null) return;
+            try
+            {
+                var localFolder = ApplicationData.Current.LocalFolder;
+                await file.CopyAsync(localFolder, _modelFileName, NameCollisionOption.ReplaceExisting);
+                var modelPath = Path.Combine(localFolder.Path, _modelFileName);
+                _session = new InferenceSession(modelPath);
+                _isLoaded = true;
+            } catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+            }
         }
 
         public override Task Detect(Mat originalImage)
         {
+            if (originalImage == null) return Task.CompletedTask;
             var input = Preprocess(originalImage);
             var output = _Detect(input);
             var faces = Postprocess(output);
