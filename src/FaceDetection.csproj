@@ -145,6 +145,7 @@
     <Compile Include="Misc\ClassFactory.cs" />
     <Compile Include="Misc\Constants.cs" />
     <Compile Include="DataModel\CornerBoundingBox.cs" />
+    <Compile Include="Utils\StrUtils.cs" />
     <Compile Include="ViewModels\DelegateCommand.cs" />
     <Compile Include="DataModel\FaceBoundingBox.cs" />
     <Compile Include="Utils\FileUtils.cs" />
