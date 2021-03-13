@@ -32,13 +32,15 @@ namespace FaceDetection.FaceDetector
 
         public override bool IsModelLoaded() => _learningModel != null;
 
-        public UltraFaceDetector(UltraFaceDetectorConfig _config) : base(_config) { }
-
-        public override async Task LoadModel(StorageFile file)
+        public override async Task LoadModel()
         {
-            if (file == null) return;
             try
             {
+                var modelLocalPath = _config.ModelLocalPath;
+                var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
+                var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
+                if (file == null) return;
+
                 var learningModel = await LearningModel.LoadFromStorageFileAsync(file);
                 _learningModel = learningModel;
                 _session = new LearningModelSession(learningModel);

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
-using Windows.Storage;
 
 namespace FaceDetection.FaceDetector
 {
@@ -14,11 +13,6 @@ namespace FaceDetection.FaceDetector
     {
         protected UltraFaceDetectorConfig _config;
         public event FaceDetectedEventHandler FaceDetected;
-
-        public BaseUltraFaceDetector(UltraFaceDetectorConfig config)
-        {
-            _config = config;
-        }
 
         protected void RaiseFaceDetectedEvent(IReadOnlyList<FaceBoundingBox> faces, Size originalSize)
         {
@@ -146,7 +140,12 @@ namespace FaceDetection.FaceDetector
             return iou;
         }
 
-        public virtual Task LoadModel(StorageFile file)
+        public void LoadConfig(IConfig config)
+        {
+            _config = (UltraFaceDetectorConfig)config;
+        }
+
+        public virtual Task LoadModel()
         {
             throw new NotImplementedException();
         }

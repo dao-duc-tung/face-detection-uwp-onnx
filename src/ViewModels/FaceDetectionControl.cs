@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
-using Windows.Storage;
 
 namespace FaceDetection.ViewModels
 {
@@ -20,21 +19,16 @@ namespace FaceDetection.ViewModels
 
         public event FaceDetectedEventHandler FaceDetected
         {
-            add
-            {
-                _faceDetector.FaceDetected += value;
-            }
-            remove
-            {
-                _faceDetector.FaceDetected -= value;
-            }
+            add => _faceDetector.FaceDetected += value;
+            remove => _faceDetector.FaceDetected -= value;
         }
 
-        public async Task LoadModelAsync<T>(StorageFile file) where T : IFaceDetector
+        public async Task InitializeAsync(Type _class, string configName)
         {
-            var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
-            _faceDetector = Activator.CreateInstance(typeof(T), new object[] { config }) as IFaceDetector;
-            await _faceDetector.LoadModel(file);
+            var config = AppConfig.Instance.GetConfig(configName);
+            _faceDetector = Activator.CreateInstance(_class) as IFaceDetector;
+            _faceDetector.LoadConfig(config);
+            await _faceDetector.LoadModel();
         }
 
         public async Task RunFaceDetection(SoftwareBitmap bmp)
@@ -53,7 +47,7 @@ namespace FaceDetection.ViewModels
             _fpsStopwatch.Stop();
             FPS = 1.0f / (float)_fpsStopwatch.Elapsed.TotalSeconds;
             img.Dispose();
-            
+
             _isDetecting = false;
         }
 

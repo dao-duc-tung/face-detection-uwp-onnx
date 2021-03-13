@@ -29,18 +29,6 @@ namespace UnitTest
         }
 
         [Fact]
-        public void UltraFaceDetectorTest_LoadModel_BadFile_IsModelLoadedReturnsFalse()
-        {
-            ultraFaceDetectorTest.LoadModel_BadFile_IsModelLoadedReturnsFalse();
-        }
-
-        [Fact]
-        public void UltraFaceDetectorTest_LoadModel_NullStorageFile_IsModelLoadedReturnsFalse()
-        {
-            ultraFaceDetectorTest.LoadModel_NullStorageFile_IsModelLoadedReturnsFalse();
-        }
-
-        [Fact]
         public void UltraFaceDetectorTest_Detect_ValidFormatImage_FaceDetectedIsRaised()
         {
             ultraFaceDetectorTest.Detect_ValidFormatImage_FaceDetectedIsRaised();
@@ -56,18 +44,6 @@ namespace UnitTest
         public void UltraFaceDetector2Test_LoadModel_GoodFile_IsModelLoadedReturnsTrue()
         {
             ultraFaceDetector2Test.LoadModel_GoodFile_IsModelLoadedReturnsTrue();
-        }
-
-        [Fact]
-        public void UltraFaceDetector2Test_LoadModel_BadFile_IsModelLoadedReturnsFalse()
-        {
-            ultraFaceDetector2Test.LoadModel_BadFile_IsModelLoadedReturnsFalse();
-        }
-
-        [Fact]
-        public void UltraFaceDetector2Test_LoadModel_NullStorageFile_IsModelLoadedReturnsFalse()
-        {
-            ultraFaceDetector2Test.LoadModel_NullStorageFile_IsModelLoadedReturnsFalse();
         }
 
         [Fact]

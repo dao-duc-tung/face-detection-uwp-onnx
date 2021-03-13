@@ -60,7 +60,7 @@
                     <SymbolIcon Symbol="Pictures"/>
                 </Viewbox>
             </Button>
-            <Button Name="CameraButton" 
+            <Button Name="CameraButton"
                     Command="{x:Bind ViewModel.ToggleCameraCmd}">
                 <Viewbox>
                     <SymbolIcon Symbol="Camera"/>
