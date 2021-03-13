@@ -1,11 +1,9 @@
 ﻿using Emgu.CV;
-using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using FaceDetection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Threading.Tasks;
 using Windows.AI.MachineLearning;
 using Windows.Storage;

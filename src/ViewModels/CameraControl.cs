@@ -1,14 +1,10 @@
-﻿using FaceDetection.Utils;
-using Microsoft.Toolkit.Uwp.Helpers;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
-using Windows.Devices.Sensors;
 using Windows.Foundation;
-using Windows.Foundation.Metadata;
 using Windows.Graphics.Display;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
