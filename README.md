@@ -118,7 +118,7 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
 ### Logging
 
 - The application uses full-stack monitoring Sentry for error reporting
-- In Release build, the application will report an error to my Sentry Report dashboard
+- In Release build, the application will report any error to my Sentry Report dashboard
 
 
 <!-- THINGS TO NOTE -->
@@ -159,7 +159,8 @@ public delegate void FaceDetectedEventHandler(object sender, FaceDetectedEventAr
 public interface IFaceDetector
 {
     event FaceDetectedEventHandler FaceDetected;
-    Task LoadModel(StorageFile file);
+    void LoadConfig(IConfig config);
+    Task LoadModel();
     bool IsModelLoaded();
     Task Detect(Mat input);
 }
