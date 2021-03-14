@@ -126,7 +126,7 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
 
 ### Use case diagram
 
-![Use case Diagram][use-case-diagram]
+![Use case diagram][use-case-diagram]
 
 User can perform 3 actions which are opening an image, starting camera stream, and detecting faces on the image/camera frame. These 3 actions are independent. Each action depends on some other actions. The Use Case diagram above briefly describes all the actions.
 
@@ -143,6 +143,16 @@ When the user enables the Face Detection function, the Face Detector will get th
 Face Detector's outputs are the input of the Distance Estimator as well. The distance from each face to the camera will then be display on the *Canvas layer*.
 
 By making the module's input/output like this, each module will know clearly about their responsibility and the coupling can be reduced in the class design phase.
+
+### Sequence diagram
+
+These sequence diagrams below intuitively describe the data flow.
+
+![Load image sequence diagram][load-image-sequence-diagram]
+
+![Toggle camera sequence diagram][toggle-camera-sequence-diagram]
+
+![Toggle face detection sequence diagram][toggle-face-detection-sequence-diagram]
 
 ### Add new face detector
 
@@ -286,5 +296,8 @@ Project Link: [https://github.com/dao-duc-tung/face-detection-uwp-onnx](https://
 [estimate-distance]: media/estimate-distance.gif
 [use-case-diagram]: media/use-case-diagram.png
 [data-flow]: media/data-flow.png
+[load-image-sequence-diagram]: media/load-image-sequence-diagram.png
+[toggle-camera-sequence-diagram]: media/toggle-camera-sequence-diagram.png
+[toggle-face-detection-sequence-diagram]: media/toggle-face-detection-sequence-diagram.png
 [windows-ml]: media/winml-nuget.svg
 [pinhole-camera]: media/pinhole-camera.png

@@ -4778,8 +4778,8 @@
 												"$ref": "AAAAAAF4KrTqAfinD8w="
 											},
 											"font": "Arial;13;0",
-											"left": 70.97900390625,
-											"top": 5,
+											"left": 78.97900390625,
+											"top": 13,
 											"width": 115.9052734375,
 											"height": 13,
 											"text": "SequenceDiagram1"
@@ -4791,14 +4791,16 @@
 												"$ref": "AAAAAAF4KrTqAfinD8w="
 											},
 											"font": "Arial;13;1",
-											"left": 5,
-											"top": 5,
+											"left": 13,
+											"top": 13,
 											"width": 60.97900390625,
 											"height": 13,
 											"text": "interaction"
 										}
 									],
 									"font": "Arial;13;0",
+									"left": 8,
+									"top": 8,
 									"width": 695,
 									"height": 595,
 									"nameLabel": {
@@ -6374,9 +6376,9 @@
 												"$ref": "AAAAAAF4Kr/+b/xigZE="
 											},
 											"font": "Arial;13;0",
-											"left": 1062.97900390625,
+											"left": 1058.58642578125,
 											"top": 421,
-											"width": 115.9052734375,
+											"width": 102.791015625,
 											"height": 13,
 											"text": "SequenceDiagram1"
 										},
@@ -6389,7 +6391,7 @@
 											"font": "Arial;13;1",
 											"left": 997,
 											"top": 421,
-											"width": 60.97900390625,
+											"width": 56.58642578125,
 											"height": 13,
 											"text": "interaction"
 										}
