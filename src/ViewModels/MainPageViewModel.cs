@@ -25,6 +25,9 @@ namespace FaceDetection.ViewModels
 {
     public class MainPageViewModel : BaseNotifyPropertyChanged
     {
+        private string _faceDetectorConfigName = ConfigName.UltraFaceDetector;
+        private Type _faceDetectorClass = typeof(UltraFaceDetector2);
+
         private FrameModel _frameModel { get; } = FrameModel.Instance;
         private CameraControl _cameraControl { get; } = new CameraControl();
         private FaceDetectionControl _faceDetectionControl { get; } = new FaceDetectionControl();
@@ -66,7 +69,7 @@ namespace FaceDetection.ViewModels
         {
             BindCommands();
             SubscribeEvents();
-            Task.Run(LoadModelAsync).Wait();
+            Task.Run(InitFaceDetectionControl).Wait();
             InitDistanceEstimator();
         }
 
@@ -84,21 +87,17 @@ namespace FaceDetection.ViewModels
             _frameModel.PropertyChanged += _frameModel_PropertyChanged;
         }
 
-        private void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async void _frameModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(_frameModel.SoftwareBitmap))
             {
-                Task.Run(async () => await RunFaceDetection());
+                await RunFaceDetection();
             }
         }
 
-        private async Task LoadModelAsync()
+        private async Task InitFaceDetectionControl()
         {
-            var config = (UltraFaceDetectorConfig)AppConfig.Instance.GetConfig(ConfigName.UltraFaceDetector);
-            var modelLocalPath = config.ModelLocalPath;
-            var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
-            var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
-            await _faceDetectionControl.LoadModelAsync<UltraFaceDetector>(file);
+            await _faceDetectionControl.InitializeAsync(_faceDetectorClass, _faceDetectorConfigName);
         }
 
         private void InitDistanceEstimator()
@@ -120,7 +119,7 @@ namespace FaceDetection.ViewModels
             StorageFile file = await picker.PickSingleFileAsync();
             if (file == null) return;
             if (_cameraControl.IsPreviewing) await TurnOffCameraPreview();
-            _imageControl.FlowDirection = FlowDirection.LeftToRight;
+            await SetImageControlPose();
 
             using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
             {
@@ -141,13 +140,26 @@ namespace FaceDetection.ViewModels
             if (!_cameraControl.IsPreviewing)
             {
                 await TurnOnCameraPreview();
-                _imageControl.FlowDirection = _cameraControl.MirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
             }
             else
             {
                 await TurnOffCameraPreview();
                 await DispatcherHelper.ExecuteOnUIThreadAsync(() => _facesCanvas.Children.Clear());
             }
+            await SetImageControlPose();
+        }
+
+        private async Task SetImageControlPose()
+        {
+            var flowDirection = FlowDirection.LeftToRight;
+            if (_cameraControl.IsPreviewing)
+            {
+                flowDirection = _cameraControl.MirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+            }
+            await DispatcherHelper.ExecuteOnUIThreadAsync(() =>
+            {
+                _imageControl.FlowDirection = flowDirection;
+            });
         }
 
         private async Task TurnOnCameraPreview()
@@ -260,6 +272,10 @@ namespace FaceDetection.ViewModels
                 faceBB.Stroke = _canvasObjectColor;
                 _facesCanvas.Children.Add(faceBB);
 
+                var probStr = StrUtils.RdFloat(faces[i].Confidence);
+                TextBlock prob = UIUtils.CreateTextBlock(probStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB) - 20);
+                _facesCanvas.Children.Add(prob);
+
                 if (_cameraControl.IsPreviewing)
                     FaceDetectionFPSString = string.Format(_faceDetectionFPSStringFormat, StrUtils.RdFloat(_faceDetectionControl.FPS));
                 else
@@ -283,10 +299,10 @@ namespace FaceDetection.ViewModels
                     _facesCanvas.Children.Add(scaledSize);
                 }
             }
-            SetFacesCanvasRotation(originalSize);
+            SetFacesCanvasPose(originalSize);
         }
 
-        private void SetFacesCanvasRotation(System.Drawing.Size streamSize)
+        private void SetFacesCanvasPose(System.Drawing.Size streamSize)
         {
             var windowSize = GetWindowSize();
             var previewArea = GetDisplayRectInControl(streamSize, windowSize);

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -38,13 +37,15 @@ namespace FaceDetection.FaceDetector
 
         public override bool IsModelLoaded() => _isLoaded;
 
-        public UltraFaceDetector2(UltraFaceDetectorConfig _config) : base(_config) { }
-
-        public override async Task LoadModel(StorageFile file)
+        public override async Task LoadModel()
         {
-            if (file == null) return;
             try
             {
+                var modelLocalPath = _config.ModelLocalPath;
+                var uri = FileUtils.GetUriByLocalFilePath(modelLocalPath);
+                var file = await StorageFile.GetFileFromApplicationUriAsync(uri);
+                if (file == null) return;
+
                 var localFolder = ApplicationData.Current.LocalFolder;
                 await file.CopyAsync(localFolder, _modelFileName, NameCollisionOption.ReplaceExisting);
                 var modelPath = Path.Combine(localFolder.Path, _modelFileName);
@@ -112,7 +113,7 @@ namespace FaceDetection.FaceDetector
             int width = image.Width;
             int height = image.Height;
             Tensor<float> imageData = new DenseTensor<float>(new[] { 1, 3, height, width }, false);
-            
+
             var data = image.ToImage<Rgb, float>();
             for (int z = 0; z < 3; z++)
             {

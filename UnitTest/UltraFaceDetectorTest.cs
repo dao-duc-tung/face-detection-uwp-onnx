@@ -20,9 +20,10 @@ namespace UnitTest
 
         public UltraFaceDetectorTest(TestFixture fixture)
         {
+            _detector = Activator.CreateInstance(typeof(T)) as IFaceDetector;
             _appConfig = fixture.AppConfig;
             var config = (UltraFaceDetectorConfig)_appConfig.GetConfig(ConfigName.UltraFaceDetector);
-            _detector = Activator.CreateInstance(typeof(T), new object[] { config }) as IFaceDetector;
+            _detector.LoadConfig(config);
         }
 
         private async Task<StorageFile> LoadStorageFile(string path)
@@ -34,42 +35,15 @@ namespace UnitTest
 
         public async void LoadModel_GoodFile_IsModelLoadedReturnsTrue()
         {
-            var config = (UltraFaceDetectorConfig)_appConfig.GetConfig(ConfigName.UltraFaceDetector);
-            var modelLocalPath = config.ModelLocalPath;
-            var file = await LoadStorageFile(modelLocalPath);
-
-            await _detector.LoadModel(file);
+            await _detector.LoadModel();
 
             Assert.True(_detector.IsModelLoaded());
         }
 
-        public async void LoadModel_BadFile_IsModelLoadedReturnsFalse()
-        {
-            var file = await LoadStorageFile(_badModelPath);
-
-            await _detector.LoadModel(file);
-
-            Assert.False(_detector.IsModelLoaded());
-        }
-
-        public async void LoadModel_NullStorageFile_IsModelLoadedReturnsFalse()
-        {
-            await _detector.LoadModel(null);
-
-            Assert.False(_detector.IsModelLoaded());
-        }
-
-        private async Task LoadOnnxModel()
-        {
-            var config = (UltraFaceDetectorConfig)_appConfig.GetConfig(ConfigName.UltraFaceDetector);
-            var modelLocalPath = config.ModelLocalPath;
-            var modelFile = await LoadStorageFile(modelLocalPath);
-            await _detector.LoadModel(modelFile);
-        }
 
         public async void Detect_ValidFormatImage_FaceDetectedIsRaised()
         {
-            await LoadOnnxModel();
+            await _detector.LoadModel();
             var file = await LoadStorageFile(_validFormatImagePath);
             Mat img;
             using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
@@ -92,7 +66,7 @@ namespace UnitTest
 
         public async void Detect_NullImage_FaceDetectedIsNotRaised()
         {
-            await LoadOnnxModel();
+            await _detector.LoadModel();
             _detector.FaceDetected += _detector_FaceDetectedIsNotRaised;
 
             await _detector.Detect(null);

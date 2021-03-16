@@ -19,7 +19,8 @@ namespace FaceDetection.FaceDetector
     {
         event FaceDetectedEventHandler FaceDetected;
 
-        Task LoadModel(StorageFile file);
+        void LoadConfig(IConfig config);
+        Task LoadModel();
         bool IsModelLoaded();
         Task Detect(Mat input);
     }

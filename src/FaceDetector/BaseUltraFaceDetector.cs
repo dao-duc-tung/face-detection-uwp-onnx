@@ -1,16 +1,11 @@
 ﻿using Emgu.CV;
 using Emgu.CV.CvEnum;
-using Emgu.CV.Structure;
 using FaceDetection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Windows.AI.MachineLearning;
-using Windows.Storage;
 
 namespace FaceDetection.FaceDetector
 {
@@ -18,11 +13,6 @@ namespace FaceDetection.FaceDetector
     {
         protected UltraFaceDetectorConfig _config;
         public event FaceDetectedEventHandler FaceDetected;
-
-        public BaseUltraFaceDetector(UltraFaceDetectorConfig config)
-        {
-            _config = config;
-        }
 
         protected void RaiseFaceDetectedEvent(IReadOnlyList<FaceBoundingBox> faces, Size originalSize)
         {
@@ -113,7 +103,7 @@ namespace FaceDetection.FaceDetector
                 foreach (FaceBoundingBox box in remaining_boxes)
                 {
                     // Check IOU between top box and each remaining box
-                    if (Get_IOU(predictions[predictions.Count - 1], box) > _config.IoUThreshold)
+                    if (GetIoU(predictions[predictions.Count - 1], box) > _config.IoUThreshold)
                     {
                         boxCandidates.Remove(box);
                     }
@@ -122,7 +112,7 @@ namespace FaceDetection.FaceDetector
             return predictions;
         }
 
-        protected static float Get_IOU(FaceBoundingBox bb1, FaceBoundingBox bb2)
+        protected static float GetIoU(FaceBoundingBox bb1, FaceBoundingBox bb2)
         {
             // Calculate Intersection over Union ratio of 2 boxes.
             float x_left = Math.Max(bb1.X0, bb2.X0);
@@ -150,7 +140,12 @@ namespace FaceDetection.FaceDetector
             return iou;
         }
 
-        public virtual Task LoadModel(StorageFile file)
+        public void LoadConfig(IConfig config)
+        {
+            _config = (UltraFaceDetectorConfig)config;
+        }
+
+        public virtual Task LoadModel()
         {
             throw new NotImplementedException();
         }

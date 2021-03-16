@@ -1,14 +1,10 @@
-﻿using FaceDetection.Utils;
-using Microsoft.Toolkit.Uwp.Helpers;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
-using Windows.Devices.Sensors;
 using Windows.Foundation;
-using Windows.Foundation.Metadata;
 using Windows.Graphics.Display;
 using Windows.Media.Capture;
 using Windows.Media.Capture.Frames;
@@ -19,25 +15,17 @@ namespace FaceDetection.ViewModels
 {
     public class CameraControl
     {
-        private readonly DisplayInformation _displayInformation = DisplayInformation.GetForCurrentView();
         private bool _isInitialized;
         private MediaCapture _mediaCapture;
         private MediaFrameReader _frameReader;
 
-        public IMediaEncodingProperties PreviewProperties;
         public bool IsPreviewing { get; set; }
         public bool MirroringPreview { get; set; }
 
         public event TypedEventHandler<MediaFrameReader, MediaFrameArrivedEventArgs> FrameArrived
         {
-            add
-            {
-                _frameReader.FrameArrived += value;
-            }
-            remove
-            {
-                _frameReader.FrameArrived -= value;
-            }
+            add => _frameReader.FrameArrived += value;
+            remove => _frameReader.FrameArrived -= value;
         }
 
         public async Task StartPreviewAsync()
@@ -59,7 +47,6 @@ namespace FaceDetection.ViewModels
         public async Task StopPreviewAsync()
         {
             IsPreviewing = false;
-            PreviewProperties = null;
             await _frameReader.StopAsync();
         }
 
@@ -87,7 +74,6 @@ namespace FaceDetection.ViewModels
             try
             {
                 await _mediaCapture.InitializeAsync(settings);
-                PreviewProperties = _mediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview);
                 // Only mirror the preview if the camera is on the front panel
                 MirroringPreview = (cameraDevice?.EnclosureLocation?.Panel == Windows.Devices.Enumeration.Panel.Front);
                 _isInitialized = true;

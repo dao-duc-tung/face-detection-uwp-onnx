@@ -88,6 +88,7 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
   - In **Solution Explorer** window, right-click on solution, select **Configuration Manager**
   - On **Active solution platform**, select **x86**
 4. (Optional) Run test
+  - On Menu bar, select **Test**, select **Processor Architecture for AnyCPU Projects**, select **x86**
   - In **Solution Explorer** window, right click on **UnitTest** project, select **Run Tests**
 5. Run main application
   - Build and run **FaceDetection** project
@@ -118,7 +119,7 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
 ### Logging
 
 - The application uses full-stack monitoring Sentry for error reporting
-- In Release build, the application will report an error to my Sentry Report dashboard
+- In Release build, the application will report any error to my Sentry Report dashboard
 
 
 <!-- THINGS TO NOTE -->
@@ -126,7 +127,7 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
 
 ### Use case diagram
 
-![Use case Diagram][use-case-diagram]
+![Use case diagram][use-case-diagram]
 
 User can perform 3 actions which are opening an image, starting camera stream, and detecting faces on the image/camera frame. These 3 actions are independent. Each action depends on some other actions. The Use Case diagram above briefly describes all the actions.
 
@@ -144,6 +145,16 @@ Face Detector's outputs are the input of the Distance Estimator as well. The dis
 
 By making the module's input/output like this, each module will know clearly about their responsibility and the coupling can be reduced in the class design phase.
 
+### Sequence diagram
+
+These sequence diagrams below intuitively describe the data flow.
+
+![Load image sequence diagram][load-image-sequence-diagram]
+
+![Toggle camera sequence diagram][toggle-camera-sequence-diagram]
+
+![Toggle face detection sequence diagram][toggle-face-detection-sequence-diagram]
+
 ### Add new face detector
 
 The new face detector must implement **IFaceDetector** interface as below. After the detection is finished, the FaceDetected event should be triggered.
@@ -159,7 +170,8 @@ public delegate void FaceDetectedEventHandler(object sender, FaceDetectedEventAr
 public interface IFaceDetector
 {
     event FaceDetectedEventHandler FaceDetected;
-    Task LoadModel(StorageFile file);
+    void LoadConfig(IConfig config);
+    Task LoadModel();
     bool IsModelLoaded();
     Task Detect(Mat input);
 }
@@ -285,5 +297,8 @@ Project Link: [https://github.com/dao-duc-tung/face-detection-uwp-onnx](https://
 [estimate-distance]: media/estimate-distance.gif
 [use-case-diagram]: media/use-case-diagram.png
 [data-flow]: media/data-flow.png
+[load-image-sequence-diagram]: media/load-image-sequence-diagram.png
+[toggle-camera-sequence-diagram]: media/toggle-camera-sequence-diagram.png
+[toggle-face-detection-sequence-diagram]: media/toggle-face-detection-sequence-diagram.png
 [windows-ml]: media/winml-nuget.svg
 [pinhole-camera]: media/pinhole-camera.png
