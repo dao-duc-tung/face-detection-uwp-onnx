@@ -26,7 +26,7 @@ namespace FaceDetection.ViewModels
     public class MainPageViewModel : BaseNotifyPropertyChanged
     {
         private string _faceDetectorConfigName = ConfigName.UltraFaceDetector;
-        private Type _faceDetectorClass = typeof(UltraFaceDetector);
+        private Type _faceDetectorClass = typeof(UltraFaceDetector2);
 
         private FrameModel _frameModel { get; } = FrameModel.Instance;
         private CameraControl _cameraControl { get; } = new CameraControl();
