@@ -88,6 +88,7 @@ The purpose of the project is to integrate an ONNX-based Face Detection CNN Mode
   - In **Solution Explorer** window, right-click on solution, select **Configuration Manager**
   - On **Active solution platform**, select **x86**
 4. (Optional) Run test
+  - On Menu bar, select **Test**, select **Processor Architecture for AnyCPU Projects**, select **x86**
   - In **Solution Explorer** window, right click on **UnitTest** project, select **Run Tests**
 5. Run main application
   - Build and run **FaceDetection** project
