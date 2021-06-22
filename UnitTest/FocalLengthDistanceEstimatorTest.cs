@@ -14,8 +14,8 @@ namespace UnitTest
         private AppConfig _appConfig;
         private FocalLengthDistanceEstimator _estimator;
 
-        private CornerBoundingBox validBB = new CornerBoundingBox() { X0 = 0, Y0 = 0, X1 = 0.1f, Y1 = 0.3f };
-        private const float expectedDist1 = 75;
+        private CornerBoundingBox validBB = new CornerBoundingBox() { X0 = 0, Y0 = 0, X1 = 300f, Y1 = 450f };
+        private const float expectedDist1 = 30;
 
         private CornerBoundingBox notValidBB = new CornerBoundingBox() { X0 = -1, Y0 = -2, X1 = -3, Y1 = -4 };
 

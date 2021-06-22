@@ -12,11 +12,12 @@ namespace FaceDetection.FaceDetector
     public abstract class BaseUltraFaceDetector : IFaceDetector
     {
         protected UltraFaceDetectorConfig _config;
+        protected Mat originalImage;
         public event FaceDetectedEventHandler FaceDetected;
 
-        protected void RaiseFaceDetectedEvent(IReadOnlyList<FaceBoundingBox> faces, Size originalSize)
+        protected void RaiseFaceDetectedEvent(IReadOnlyList<FaceBoundingBox> faces)
         {
-            var eventArgs = new FaceDetectedEventArgs() { BoundingBoxes = faces, OriginalSize = originalSize };
+            var eventArgs = new FaceDetectedEventArgs() { BoundingBoxes = faces, OriginalSize = this.originalImage.Size };
             FaceDetected?.Invoke(this, eventArgs);
         }
 
@@ -63,6 +64,8 @@ namespace FaceDetection.FaceDetector
 
         protected virtual List<FaceBoundingBox> FilterConfidences(IReadOnlyList<float> confidences, IReadOnlyList<float> boxes)
         {
+            var origWidth = originalImage.Width;
+            var origHeight = originalImage.Height;
             List<FaceBoundingBox> boxCandidates = new List<FaceBoundingBox>();
             for (int i = 0; i < confidences.Count; ++i)
             {
@@ -74,10 +77,10 @@ namespace FaceDetection.FaceDetector
                         int boxIdx = i / 2 * 4;
                         FaceBoundingBox bb = new FaceBoundingBox()
                         {
-                            X0 = boxes[boxIdx],
-                            Y0 = boxes[boxIdx + 1],
-                            X1 = boxes[boxIdx + 2],
-                            Y1 = boxes[boxIdx + 3],
+                            X0 = boxes[boxIdx] * origWidth,
+                            Y0 = boxes[boxIdx + 1] * origHeight,
+                            X1 = boxes[boxIdx + 2] * origWidth,
+                            Y1 = boxes[boxIdx + 3] * origHeight,
                             Confidence = confidence,
                         };
                         boxCandidates.Add(bb);

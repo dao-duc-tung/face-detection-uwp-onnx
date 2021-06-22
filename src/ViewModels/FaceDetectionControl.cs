@@ -51,18 +51,5 @@ namespace FaceDetection.ViewModels
 
             _isDetecting = false;
         }
-
-        public static FaceBoundingBox ScaleBoundingBox(FaceBoundingBox origBB, System.Drawing.Size originalSize)
-        {
-            int origWidth = originalSize.Width;
-            int origHeight = originalSize.Height;
-
-            var bb = new FaceBoundingBox();
-            bb.X0 = origBB.X0 * origWidth;
-            bb.X1 = origBB.X1 * origWidth;
-            bb.Y0 = origBB.Y0 * origHeight;
-            bb.Y1 = origBB.Y1 * origHeight;
-            return bb;
-        }
     }
 }

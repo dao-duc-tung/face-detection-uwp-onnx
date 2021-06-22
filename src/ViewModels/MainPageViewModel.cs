@@ -265,13 +265,13 @@ namespace FaceDetection.ViewModels
             var IsBoxSizeDisplayed = ((MainConfig)AppConfig.Instance.GetConfig(ConfigName.Main)).IsBoxSizeDisplayed;
             for (int i = 0; i < faces.Count; ++i)
             {
-                var bb = FaceDetectionControl.ScaleBoundingBox(faces[i], originalSize);
+                var bb = faces[i];
                 Rectangle faceBB = ConvertPreviewToUiRectangle(bb, originalSize);
                 faceBB.StrokeThickness = 2;
                 faceBB.Stroke = _canvasObjectColor;
                 _facesCanvas.Children.Add(faceBB);
 
-                var probStr = StrUtils.RdFloat(faces[i].Confidence);
+                var probStr = StrUtils.RdFloat(bb.Confidence);
                 TextBlock prob = UIUtils.CreateTextBlock(probStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB) - 20);
                 _facesCanvas.Children.Add(prob);
 
@@ -282,14 +282,14 @@ namespace FaceDetection.ViewModels
 
                 if (_cameraControl.IsPreviewing)
                 {
-                    var distStr = StrUtils.RdFloat(_distanceEstimator.ComputeDistance(faces[i]), 0) + " cm";
+                    var distStr = StrUtils.RdFloat(_distanceEstimator.ComputeDistance(bb), 0) + " cm";
                     TextBlock distance = UIUtils.CreateTextBlock(distStr, _canvasObjectColor, Canvas.GetLeft(faceBB) + 5, Canvas.GetTop(faceBB));
                     _facesCanvas.Children.Add(distance);
                 }
 
                 if (IsBoxSizeDisplayed)
                 {
-                    var origSizeStr = $"Orig Size: {StrUtils.RdFloat(faces[i].Width)} x {StrUtils.RdFloat(faces[i].Height)}";
+                    var origSizeStr = $"Orig Size: {StrUtils.RdFloat(bb.Width)} x {StrUtils.RdFloat(bb.Height)}";
                     TextBlock origSize = UIUtils.CreateTextBlock(origSizeStr, _canvasObjectColor, Canvas.GetLeft(faceBB), Canvas.GetTop(faceBB) - 40);
                     _facesCanvas.Children.Add(origSize);
 

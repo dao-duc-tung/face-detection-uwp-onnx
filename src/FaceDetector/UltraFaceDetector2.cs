@@ -60,10 +60,11 @@ namespace FaceDetection.FaceDetector
         public override Task Detect(Mat originalImage)
         {
             if (originalImage == null) return Task.CompletedTask;
+            this.originalImage = originalImage;
             var input = Preprocess(originalImage);
             var output = _Detect(input);
             var faces = Postprocess(output);
-            RaiseFaceDetectedEvent(faces, originalImage.Size);
+            RaiseFaceDetectedEvent(faces);
             return Task.CompletedTask;
         }
 

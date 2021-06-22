@@ -135,10 +135,11 @@ namespace FaceDetection.FaceDetector
         public override Task Detect(Mat originalImage)
         {
             if (originalImage == null) return Task.CompletedTask;
+            this.originalImage = originalImage;
             var input = Preprocess(originalImage);
             var output = _Detect(input);
             var faces = Postprocess(output);
-            RaiseFaceDetectedEvent(faces, originalImage.Size);
+            RaiseFaceDetectedEvent(faces);
             return Task.CompletedTask;
         }
 
@@ -183,6 +184,8 @@ namespace FaceDetection.FaceDetector
 
         protected override List<FaceBoundingBox> FilterConfidences(IReadOnlyList<float> confidences, IReadOnlyList<float> boxes)
         {
+            var origWidth = originalImage.Width;
+            var origHeight = originalImage.Height;
             List<FaceBoundingBox> boxCandidates = new List<FaceBoundingBox>();
             for (int i = 0; i < _numAnchors; ++i)
             {
@@ -195,10 +198,10 @@ namespace FaceDetection.FaceDetector
                     float w = MathF.Exp(boxes[boxIdx + 2] * _SIZE_VARIANCE) * _priors[i][2];
                     float h = MathF.Exp(boxes[boxIdx + 3] * _SIZE_VARIANCE) * _priors[i][3];
                     FaceBoundingBox bb = new FaceBoundingBox() {
-                        X0 = Clip(xCenter - w / 2.0f, 1),
-                        Y0 = Clip(yCenter - h / 2.0f, 1),
-                        X1 = Clip(xCenter + w / 2.0f, 1),
-                        Y1 = Clip(yCenter + h / 2.0f, 1),
+                        X0 = Clip(xCenter - w / 2.0f, 1) * origWidth,
+                        Y0 = Clip(yCenter - h / 2.0f, 1) * origHeight,
+                        X1 = Clip(xCenter + w / 2.0f, 1) * origWidth,
+                        Y1 = Clip(yCenter + h / 2.0f, 1) * origHeight,
                         Confidence = Clip(score, 1),
                     };
                     boxCandidates.Add(bb);

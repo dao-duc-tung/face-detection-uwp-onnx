@@ -54,18 +54,24 @@ namespace FaceDetection.FaceDetector
         public override async Task Detect(Mat originalImage)
         {
             if (originalImage == null) return;
+            this.originalImage = originalImage;
             var input = Preprocess(originalImage);
+            var output = await _Detect(input);
+            var faces = Postprocess(output);
+            RaiseFaceDetectedEvent(faces);
+        }
 
+        private async Task<UltraFaceDetectorOutput> _Detect(UltraFaceDetectorInput input)
+        {
             var output = new UltraFaceDetectorOutput();
             var binding = new LearningModelBinding(_session);
             binding.Bind("input", input.input);
             binding.Bind("scores", output.scores);
             binding.Bind("boxes", output.boxes);
             LearningModelEvaluationResult result = await _session.EvaluateAsync(binding, "0");
-
-            var faces = Postprocess(output);
-            RaiseFaceDetectedEvent(faces, originalImage.Size);
+            return output;
         }
+
 
         private new UltraFaceDetectorInput Preprocess(Mat originalImage)
         {
