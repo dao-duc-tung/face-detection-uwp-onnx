@@ -53,6 +53,8 @@
 
 The purpose of the project is to integrate an ONNX-based Face Detection CNN Model into a Universal Windows Platform application.
 
+In this project, I use **Windows ML**, **ONNX Runtime**, and **Emgu CV** for inference on [**Ultra-lightweight face detection model**](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB). The implementation of **Windows ML** is in *UltraFaceDetector.cs*, the implementation of **ONNX Runtime** is in *UltraFaceDetector2.cs* and the implementation of **Emgu CV** is in *UltraFaceDetector3.cs* (default).
+
 ### Built With
 
 - Emgu.CV v4.5.1
@@ -218,8 +220,6 @@ OpenCV needs an extra configuration file to import object detection models from 
 Follow [this link](https://github.com/opencv/opencv/wiki/TensorFlow-Object-Detection-API) to generate that extra file from Tensorflow Object detection models.
 
 ## ONNX Inference
-
-In this application, I use **Windows ML** and **ONNX Runtime** for inference on [**Ultra-lightweight face detection model**](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB). The inference implementation using **Windows ML** is in *UltraFaceDetector.cs* and the implementation of **ONNX Runtime** is in *UltraFaceDetector2.cs*.
 
 ![Windows ML][windows-ml]
 
