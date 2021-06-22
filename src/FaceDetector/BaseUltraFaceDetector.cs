@@ -61,7 +61,7 @@ namespace FaceDetection.FaceDetector
             return picked;
         }
 
-        protected List<FaceBoundingBox> FilterConfidences(IReadOnlyList<float> confidences, IReadOnlyList<float> boxes)
+        protected virtual List<FaceBoundingBox> FilterConfidences(IReadOnlyList<float> confidences, IReadOnlyList<float> boxes)
         {
             List<FaceBoundingBox> boxCandidates = new List<FaceBoundingBox>();
             for (int i = 0; i < confidences.Count; ++i)
@@ -87,7 +87,7 @@ namespace FaceDetection.FaceDetector
             return boxCandidates;
         }
 
-        protected List<FaceBoundingBox> HardNMS(List<FaceBoundingBox> boxCandidates)
+        protected virtual List<FaceBoundingBox> HardNMS(List<FaceBoundingBox> boxCandidates)
         {
             // Do Non-Maximum Suppression to remove overlapping boxes
             boxCandidates.Sort((a, b) => b.Confidence.CompareTo(a.Confidence));
@@ -140,7 +140,7 @@ namespace FaceDetection.FaceDetector
             return iou;
         }
 
-        public void LoadConfig(IConfig config)
+        public virtual void LoadConfig(IConfig config)
         {
             _config = (UltraFaceDetectorConfig)config;
         }

@@ -21,6 +21,8 @@ namespace UnitTest
         private async void LoadAppConfig()
         {
             await FileUtils.ReadConfigFile<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector, ConfigLocalPath.UltraFaceDetector);
+            await FileUtils.ReadConfigFile<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector2, ConfigLocalPath.UltraFaceDetector2);
+            await FileUtils.ReadConfigFile<UltraFaceDetectorConfig>(ConfigName.UltraFaceDetector3, ConfigLocalPath.UltraFaceDetector3);
             await FileUtils.ReadConfigFile<FocalLengthDistanceEstimatorConfig>(ConfigName.FocalLengthDistanceEstimator, ConfigLocalPath.FocalLengthDistanceEstimator);
             AppConfig = AppConfig.Instance;
         }

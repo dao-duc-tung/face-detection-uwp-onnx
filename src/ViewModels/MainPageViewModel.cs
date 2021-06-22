@@ -25,8 +25,7 @@ namespace FaceDetection.ViewModels
 {
     public class MainPageViewModel : BaseNotifyPropertyChanged
     {
-        private string _faceDetectorConfigName = ConfigName.UltraFaceDetector;
-        private Type _faceDetectorClass = typeof(UltraFaceDetector2);
+        private Type _faceDetectorClass = typeof(UltraFaceDetector3);
 
         private FrameModel _frameModel { get; } = FrameModel.Instance;
         private CameraControl _cameraControl { get; } = new CameraControl();
@@ -97,7 +96,7 @@ namespace FaceDetection.ViewModels
 
         private async Task InitFaceDetectionControl()
         {
-            await _faceDetectionControl.InitializeAsync(_faceDetectorClass, _faceDetectorConfigName);
+            await _faceDetectionControl.InitializeAsync(_faceDetectorClass);
         }
 
         private void InitDistanceEstimator()

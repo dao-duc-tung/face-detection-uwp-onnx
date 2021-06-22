@@ -22,7 +22,8 @@ namespace UnitTest
         {
             _detector = Activator.CreateInstance(typeof(T)) as IFaceDetector;
             _appConfig = fixture.AppConfig;
-            var config = (UltraFaceDetectorConfig)_appConfig.GetConfig(ConfigName.UltraFaceDetector);
+            var configName = UltraFaceDetectorConfig.GetConfigNameByType(_detector.GetType());
+            var config = (UltraFaceDetectorConfig)_appConfig.GetConfig(configName);
             _detector.LoadConfig(config);
         }
 

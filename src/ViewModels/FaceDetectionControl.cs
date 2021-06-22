@@ -23,8 +23,9 @@ namespace FaceDetection.ViewModels
             remove => _faceDetector.FaceDetected -= value;
         }
 
-        public async Task InitializeAsync(Type _class, string configName)
+        public async Task InitializeAsync(Type _class)
         {
+            var configName = UltraFaceDetectorConfig.GetConfigNameByType(_class);
             var config = AppConfig.Instance.GetConfig(configName);
             _faceDetector = Activator.CreateInstance(_class) as IFaceDetector;
             _faceDetector.LoadConfig(config);

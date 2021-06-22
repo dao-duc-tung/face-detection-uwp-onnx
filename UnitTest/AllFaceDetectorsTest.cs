@@ -13,6 +13,7 @@ namespace UnitTest
         private TestFixture testFixture;
         private UltraFaceDetectorTest<UltraFaceDetector> ultraFaceDetectorTest;
         private UltraFaceDetectorTest<UltraFaceDetector2> ultraFaceDetector2Test;
+        private UltraFaceDetectorTest<UltraFaceDetector3> ultraFaceDetector3Test;
 
         public AllFaceDetectorsTest()
         {
@@ -20,6 +21,7 @@ namespace UnitTest
             while (testFixture.AppConfig == null);
             ultraFaceDetectorTest = new UltraFaceDetectorTest<UltraFaceDetector>(testFixture);
             ultraFaceDetector2Test = new UltraFaceDetectorTest<UltraFaceDetector2>(testFixture);
+            ultraFaceDetector3Test = new UltraFaceDetectorTest<UltraFaceDetector3>(testFixture);
         }
 
         [Fact]
@@ -56,6 +58,24 @@ namespace UnitTest
         public void UltraFaceDetector2Test_Detect_NullImage_FaceDetectedIsNotRaised()
         {
             ultraFaceDetector2Test.Detect_NullImage_FaceDetectedIsNotRaised();
+        }
+
+        [Fact]
+        public void UltraFaceDetector3Test_LoadModel_GoodFile_IsModelLoadedReturnsTrue()
+        {
+            ultraFaceDetector3Test.LoadModel_GoodFile_IsModelLoadedReturnsTrue();
+        }
+
+        [Fact]
+        public void UltraFaceDetector3Test_Detect_ValidFormatImage_FaceDetectedIsRaised()
+        {
+            ultraFaceDetector3Test.Detect_ValidFormatImage_FaceDetectedIsRaised();
+        }
+
+        [Fact]
+        public void UltraFaceDetector3Test_Detect_NullImage_FaceDetectedIsNotRaised()
+        {
+            ultraFaceDetector3Test.Detect_NullImage_FaceDetectedIsNotRaised();
         }
     }
 }

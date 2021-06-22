@@ -134,6 +134,7 @@
     <Compile Include="FaceDetector\IFaceDetector.cs" />
     <Compile Include="FaceDetector\UltraFaceDetector.cs" />
     <Compile Include="FaceDetector\UltraFaceDetector2.cs" />
+    <Compile Include="FaceDetector\UltraFaceDetector3.cs" />
     <Compile Include="FaceDetector\UltraFaceDetectorConfig.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -166,6 +167,12 @@
     <None Include="Assets\MainConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Assets\UltraFaceDetector3Config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\UltraFaceDetector2Config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Assets\UltraFaceDetectorConfig.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -180,6 +187,9 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\version-RFB-320_without_postprocessing.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
