@@ -53,7 +53,13 @@
 
 The purpose of the project is to integrate an ONNX-based Face Detection CNN Model into a Universal Windows Platform application.
 
-In this project, I use **Windows ML**, **ONNX Runtime**, and **Emgu CV** for inference on [**Ultra-lightweight face detection model**](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB). The implementation of **Windows ML** is in *UltraFaceDetector.cs*, the implementation of **ONNX Runtime** is in *UltraFaceDetector2.cs* and the implementation of **Emgu CV** is in *UltraFaceDetector3.cs* (default).
+In this project, I use **Windows ML**, **ONNX Runtime**, and **Emgu CV** for inference on [**Ultra-lightweight face detection model**](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB). The implementation of **Windows ML** is in *UltraFaceDetector.cs*, the implementation of **ONNX Runtime** is in *UltraFaceDetector2.cs* and the implementation of **Emgu CV** is in *UltraFaceDetector3.cs* (default). Below is the performance detail.
+
+| Class              	| Model                                       	| FPS 	|
+|--------------------	|---------------------------------------------	|-----	|
+| UltraFaceDetector  	| version-RFB-320.onnx                        	| 17  	|
+| UltraFaceDetector2 	| version-RFB-320.onnx                        	| 8   	|
+| UltraFaceDetector3 	| version-RFB-320_without_postprocessing.onnx 	| 100 	|
 
 ### Built With
 
@@ -117,6 +123,10 @@ In this project, I use **Windows ML**, **ONNX Runtime**, and **Emgu CV** for inf
 ![Estimate distance][estimate-distance]
 
 - This function is automatically enabled when the face detection function is enabled
+
+### Change face detection implementation
+
+- To change the face detection implementation, change the property *_faceDetectorClass* of *MainPageViewModel* to the corresponding class. There are 3 implementation classes including *UltraFaceDetector*, *UltraFaceDetector2*, and *UltraFaceDetector3*.
 
 ### Logging
 
