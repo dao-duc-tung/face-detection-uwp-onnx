@@ -58,7 +58,7 @@ In this project, I use **Windows ML**, **ONNX Runtime**, and **Emgu CV** for inf
 | Class              	| Model                                       	| FPS 	|
 |--------------------	|---------------------------------------------	|-----	|
 | UltraFaceDetector  	| version-RFB-320.onnx                        	| 17  	|
-| UltraFaceDetector2 	| version-RFB-320.onnx                        	| 8   	|
+| UltraFaceDetector2 	| version-RFB-320.onnx                        	| 11   	|
 | UltraFaceDetector3 	| version-RFB-320_without_postprocessing.onnx 	| 100 	|
 
 ### Built With

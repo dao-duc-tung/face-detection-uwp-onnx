@@ -105,34 +105,66 @@ namespace FaceDetection.FaceDetector
             return picked;
         }
 
+        /// <summary>
+        ///  This implementation is slow
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        //private static Tensor<float> ConvertImageToTensorData(Mat image)
+        //{
+        //    // perform transpose permute [2,0,1] and expand dims at axis=0
+        //    // image = np.transpose(image, [2, 0, 1])
+        //    // image = np.expand_dims(image, axis = 0)
+        //    // image = image.astype(np.float32)
+        //    int width = image.Width;
+        //    int height = image.Height;
+        //    Tensor<float> imageData = new DenseTensor<float>(new[] { 1, 3, height, width }, false);
+
+        //    var data = image.ToImage<Rgb, float>();
+        //    for (int z = 0; z < 3; z++)
+        //    {
+        //        for (int y = 0; y < height; y++)
+        //        {
+        //            for (int x = 0; x < width; x++)
+        //            {
+        //                switch (z)
+        //                {
+        //                    case 0: imageData[0, z, y, x] = (float)data[y, x].Red; break;
+        //                    case 1: imageData[0, z, y, x] = (float)data[y, x].Green; break;
+        //                    case 2: imageData[0, z, y, x] = (float)data[y, x].Blue; break;
+        //                }
+        //            }
+
+        //        }
+        //    }
+        //    return imageData;
+        //}
+
+        /// This implementation is faster a bit than the one above
         private static Tensor<float> ConvertImageToTensorData(Mat image)
         {
-            // perform transpose permute [2,0,1] and expand dims at axis=0
-            // image = np.transpose(image, [2, 0, 1])
-            // image = np.expand_dims(image, axis = 0)
-            // image = image.astype(np.float32)
-            int width = image.Width;
-            int height = image.Height;
-            Tensor<float> imageData = new DenseTensor<float>(new[] { 1, 3, height, width }, false);
+            // Create the Tensor with the appropiate dimensions  for the NN
+            Tensor<float> input = new DenseTensor<float>(new[] { 1, 3, image.Height, image.Width });
 
-            var data = image.ToImage<Rgb, float>();
-            for (int z = 0; z < 3; z++)
+            var bmd = image.DataPointer;
+            var PixelSize = image.NumberOfChannels;
+            unsafe
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < image.Height; y++)
                 {
-                    for (int x = 0; x < width; x++)
-                    {
-                        switch (z)
-                        {
-                            case 0: imageData[0, z, y, x] = (float)data[y, x].Red; break;
-                            case 1: imageData[0, z, y, x] = (float)data[y, x].Green; break;
-                            case 2: imageData[0, z, y, x] = (float)data[y, x].Blue; break;
-                        }
-                    }
+                    // row is a pointer to a full row of data with each of its colors
+                    float* row = (float*)bmd + (y * PixelSize * image.Width);
 
+                    for (int x = 0; x < image.Width; x++)
+                    {
+                        // note the order of colors is RGB
+                        input[0, 0, y, x] = row[x * PixelSize + 0];
+                        input[0, 1, y, x] = row[x * PixelSize + 1];
+                        input[0, 2, y, x] = row[x * PixelSize + 2];
+                    }
                 }
             }
-            return imageData;
+            return input;
         }
     }
 }
